@@ -59,14 +59,15 @@ Follow these phases in order. The orchestrator agent is the one running this ski
    Describe WHAT is needed, not HOW to build it.
    ```
 6. After Dory saturates, discover its output artifacts by scanning the Dory workspace for the latest `plan_*.txt`, `prompt_*.txt`, and `review_*.txt` (sort filenames to find the highest N). Copy them to the KAKIS run workspace as `final_prompt.txt`, `final_plan.txt`, `final_review.txt`.
-7. Update `kakis_state.json`: set `phase: "gate1"`, record Dory artifact paths and iteration count.
-8. If Dory fails: set `dory_failure_cause` in state, send failure notification (Phase 4), set `phase: "aborted"`, and stop.
+7. **Preemptive compression**: Read all Dory artifacts (`final_plan.txt`, `final_prompt.txt`, `final_review.txt`, and any prior `review_*.txt` that are still in the workspace). Delegate a subagent to compress them into `dory_brief.md` — a single, compact summary (max 60 lines) containing only: the goal statement, the final refined prompt, the key architectural decisions, and unresolved edge cases from the last review. The subagent should discard iteration history, repeated findings, and operational details.
+8. Update `kakis_state.json`: set `phase: "gate1"`, record Dory artifact paths and iteration count.
+9. If Dory fails: set `dory_failure_cause` in state, send failure notification (Phase 4), set `phase: "aborted"`, and stop.
 
-**Completion:** `final_prompt.txt` exists in the run workspace and `kakis_state.json` phase is `gate1`.
+**Completion:** `dory_brief.md` exists in the run workspace and `kakis_state.json` phase is `gate1`.
 
 ### Gate 1 — Dory to Bob
 
-1. Compose a Telegram message summarizing Dory's output: iteration count, key findings from the final review, and the refined prompt.
+1. Compose a Telegram message summarizing Dory's output from `dory_brief.md`: iteration count, key findings from the final review, and the refined prompt.
 2. Invoke `scripts/gate.py`:
    ```
    python3 ~/.hermes/skills/kakis/scripts/gate.py gate --message "<message>" --workspace <run_workspace> --run-id <run_id>
@@ -85,15 +86,16 @@ Follow these phases in order. The orchestrator agent is the one running this ski
    ```
 2. Parse stdout for the workspace path (a line starting with `[bob] Workspace:`).
 3. Copy Bob's `plan.md` and `results.json` from its workspace into the KAKIS run workspace as `bob_plan.md` and `bob_results.json`.
-4. Update `kakis_state.json`: set `phase: "gate2"`, record Bob's harness count and best harness (from `results.json`).
-5. If Bob fails with no usable output: notify the user, set `phase: "aborted"`, and stop.
-6. If Bob has ≥1 harness output but fewer than 2: the synthesized plan is still produced (Bob handles single-harness mode), proceed with a warning notification.
+4. **Preemptive compression**: Read `bob_plan.md`, `bob_results.json`, and the Dory brief (`dory_brief.md`). Delegate a subagent to compress them into `bob_brief.md` — a single, compact summary (max 80 lines) containing: the best harness and its score, the synthesized plan's steps (condensed to one line each), any augmentation notes about what was merged from non-basis harnesses, and key risks or trade-offs. Discard per-harness raw output, full evaluation JSON, and duplicated plan text.
+5. Update `kakis_state.json`: set `phase: "gate2"`, record Bob's harness count and best harness (from `results.json`).
+6. If Bob fails with no usable output: notify the user, set `phase: "aborted"`, and stop.
+7. If Bob has ≥1 harness output but fewer than 2: the synthesized plan is still produced (Bob handles single-harness mode), proceed with a warning notification.
 
-**Completion:** `bob_plan.md` exists in the run workspace and `kakis_state.json` phase is `gate2`.
+**Completion:** `bob_brief.md` exists in the run workspace and `kakis_state.json` phase is `gate2`.
 
 ### Gate 2 — Bob to Execute
 
-1. Compose a Telegram message summarizing Bob's output: harnesses used, best harness, score, and plan step count.
+1. Compose a Telegram message summarizing Bob's output from `bob_brief.md`: harnesses used, best harness, score, and plan step count.
 2. Invoke `scripts/gate.py` with the same parameters as Gate 1.
 3. If `proceed`, continue to Phase 3. If `abort`, set `phase: "aborted"`, notify, and stop. If `timeout`, auto-proceed.
 
@@ -105,7 +107,7 @@ Follow these phases in order. The orchestrator agent is the one running this ski
 2. If no numbered headings exist, delegate a subagent to segment the plan into logical numbered steps. If segmentation produces fewer than 2 steps, abort with notification.
 3. For each step (tracking in `completed_steps`):
    - Skip if the step index is already in `completed_steps` (resume).
-   - Delegate via `delegate_task` with the step description as the goal and full context (original KAKIS goal, Bob's plan, previous step results).
+   - Delegate via `delegate_task` with the step description as the goal and full context (original KAKIS goal, `dory_brief.md`, `bob_brief.md`, `bob_plan.md`, and previous step results). Use the briefs (`dory_brief.md`, `bob_brief.md`) as the primary context to keep subagent context small; include `bob_plan.md` only for step-level detail.
    - **Recursion guard:** Explicitly instruct the subagent: "DO NOT load or invoke the kakis skill."
    - On success: add the step index to `completed_steps`, update `kakis_state.json`.
    - On failure: retry once. If the retry fails, skip the step, log the error, and continue.
@@ -145,6 +147,7 @@ When Telegram is unavailable, fall back to writing the notification to `notifica
 - **Bob dispatch missing:** If `bob_dispatch.py` doesn't exist, the Bob phase fails. Check prerequisites before starting.
 - **State corruption:** Write `kakis_state.json` atomically (write to `.tmp` then rename).
 - **Implicit stage contracts:** Dory outputs `final_prompt.txt`, `final_plan.txt`, `final_review.txt`; Bob expects the prompt and produces `plan.md` + `results.json`. These contracts are implicit — if either skill's output format changes, the handoff breaks. Verify artifact existence at each phase transition.
+- **Compression failure:** If a compression subagent fails (timeout, context overflow), fall back to using the raw artifacts (`dory_brief.md` ← `final_plan.txt`, `bob_brief.md` ← `bob_plan.md`). The pipeline should never abort because of a compression failure.
 
 ## Verification
 
