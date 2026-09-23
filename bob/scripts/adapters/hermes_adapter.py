@@ -17,12 +17,10 @@ class HermesAdapter(HarnessAdapter):
         # Use `hermes chat` with -q for single-turn non-interactive execution
         # --quiet suppresses banners/spinners
         # --ignore-rules prevents loading skills, AGENTS.md, etc.
-        # --max-turns 1 ensures no tool-calling loops
         return [
             "hermes", "chat", "-q", prompt,
             "--quiet",
             "--ignore-rules",
-            "--max-turns", "1",
         ]
 
     def build_env(self, original_env: dict) -> dict:
