@@ -28,7 +28,7 @@ Don't use for:
 ## Prerequisites
 
 - Dory skill installed and functional (`skill_view(name='Dory')`).
-- Bob skill installed at `~/.hermes/skills/loops/bob/` with at least one working harness (`skill_view(name='bob')`).
+- Bob skill installed at `~/.hermes/skills/aios/bob/` with at least one working harness (`skill_view(name='bob')`).
 - Telegram configured in `~/.hermes/.env` (`TELEGRAM_BOT_TOKEN`, `TELEGRAM_HOME_CHANNEL`).
 - `hermes send --to telegram` delivers messages (exit code 0).
 
@@ -43,6 +43,14 @@ Follow these phases in order. The orchestrator agent is the one running this ski
 3. If multiple exist, list them and ask the user to pick one.
 4. If none exist, proceed with a fresh run.
 5. On resume, skip already-completed steps (check `completed_steps` in the state file).
+6. **Gate reply handling**: If `gate_waiting: true` in state, the user's current message IS the gate reply. Strip any `/kakis` prefix (e.g., "/kakis proceed" → "proceed"), then classify:
+   - Load `gate.py` (or use inline keyword matching with the APPROVE/REJECT sets below).
+   - If `proceed`: set `gate_waiting: false`, advance to the next phase (gate1 → bob, gate2 → execute).
+   - If `abort`: set phase `aborted`, notify the user, and stop.
+   - If `unrecognized`: send "I did not understand '...'. Reply with '/kakis proceed' to continue or '/kakis stop' to abort." and stop again (leaving `gate_waiting: true`).
+
+   APPROVE keywords: proceed, yes, go, continue, ok, okay, sure, do it, agree, approve, forward, next, yep, yea, yup
+   REJECT keywords: stop, no, abort, cancel, halt, skip, nah, decline, reject, dont, don't, later, not now, pass
 
 **Completion:** User has chosen a run path (fresh or resume) and `kakis_state.json` is loaded.
 
@@ -67,14 +75,27 @@ Follow these phases in order. The orchestrator agent is the one running this ski
 
 ### Gate 1 — Dory to Bob
 
-1. Compose a Telegram message summarizing Dory's output from `dory_brief.md`: iteration count, key findings from the final review, and the refined prompt.
-2. Invoke `scripts/gate.py`:
+The gate sends a Telegram message and then the agent STOPS. The Hermes gateway
+delivers the user's reply back to the agent's session — no polling or cron needed.
+
+1. Compose a Telegram message from `dory_brief.md`: iteration count, key findings, refined prompt. Append:
    ```
-   python3 ~/.hermes/skills/kakis/scripts/gate.py gate --message "<message>" --workspace <run_workspace> --run-id <run_id>
+   Reply with '/kakis proceed' to continue or '/kakis stop' to abort.
    ```
-3. If the gate returns `proceed`, continue to Phase 2.
-4. If `abort`, set `phase: "aborted"`, notify the user, and stop.
-5. If `timeout`, auto-proceed to Phase 2 and log it.
+   The `/kakis` prefix is required — it loads the skill in the new session so Phase 0
+   finds `gate_waiting: true` in state and classifies the reply.
+2. Send the gate message:
+   ```
+   python3 ~/.hermes/skills/kakis/scripts/gate.py gate \
+     --message "<message>" --workspace <run_workspace>
+   ```
+3. Update `kakis_state.json`: set `gate_waiting: true`.
+4. The agent STOPS. When the user replies on Telegram, the Hermes gateway
+   delivers the reply to this session. The agent resumes from Phase 0:
+   - Classify the reply using `classify_reply()` (or inline keyword check).
+   - If `proceed`: set `gate_waiting: false`, proceed to Phase 2.
+   - If `abort`: set phase `aborted`, notify the user, and stop.
+   - If `unrecognized`: send "I did not understand '...'. Reply with proceed or stop." and stop again.
 
 **Completion:** Gate decision recorded; pipeline proceeds or aborts.
 
@@ -82,7 +103,7 @@ Follow these phases in order. The orchestrator agent is the one running this ski
 
 1. Invoke Bob's dispatch CLI with Dory's refined prompt:
    ```
-   python3 ~/.hermes/skills/loops/bob/scripts/bob_dispatch.py --prompt "$(cat final_prompt.txt)"
+   python3 ~/.hermes/skills/aios/bob/scripts/bob_dispatch.py --prompt "$(cat final_prompt.txt)"
    ```
 2. Parse stdout for the workspace path (a line starting with `[bob] Workspace:`).
 3. Copy Bob's `plan.md` and `results.json` from its workspace into the KAKIS run workspace as `bob_plan.md` and `bob_results.json`.
@@ -95,9 +116,14 @@ Follow these phases in order. The orchestrator agent is the one running this ski
 
 ### Gate 2 — Bob to Execute
 
-1. Compose a Telegram message summarizing Bob's output from `bob_brief.md`: harnesses used, best harness, score, and plan step count.
-2. Invoke `scripts/gate.py` with the same parameters as Gate 1.
-3. If `proceed`, continue to Phase 3. If `abort`, set `phase: "aborted"`, notify, and stop. If `timeout`, auto-proceed.
+Same pattern as Gate 1:
+1. Compose a Telegram message from `bob_brief.md`: harnesses used, best harness, score, plan step count. Append:
+   ```
+   Reply with '/kakis proceed' to continue or '/kakis stop' to abort.
+   ```
+2. Send the gate message (same command as Gate 1).
+3. Update `kakis_state.json`: set `gate_waiting: true`.
+4. Agent STOPS. When the user replies, Hermes delivers it to the session. Phase 0 classifies the reply.
 
 **Completion:** Gate decision recorded; pipeline proceeds or aborts.
 
@@ -142,8 +168,9 @@ When Telegram is unavailable, fall back to writing the notification to `notifica
 - **Concurrent runs:** Always use timestamped workspaces (`<slug>_<timestamp>`) to avoid artifact collision.
 - **Dory artifact discovery:** Scan the workspace for the latest `plan_*.txt`/`prompt_*.txt`/`review_*.txt` — never assume a specific N.
 - **Dual reply matching in gates:** `gate.py` uses two strategies — `reply_to_message_id` (Telegram reply chain) and run-token matching (e.g., `kakis-{run_id}` embedded in the gate message). This survives concurrent Telegram activity. If building custom gates, follow this same pattern.
-- **Per-run offset storage:** `gate.py` stores `getUpdates` offsets per run in `~/.hermes/kakis-offsets/{run_id}.offset` to prevent race conditions between concurrent runs.
-- **Telegram polling in subagent context:** The gate sends the message then polls the Bot API for replies. If polling is unavailable, the gate times out and auto-proceeds after 1 hour.
+- **Per-run offset storage:** `gate.py` and `gate_poller.py` store `getUpdates` offsets per run in `~/.hermes/kakis-offsets/{run_id}.offset` to prevent race conditions between concurrent runs.
+- **Non-blocking gates:** Gates use `--send-only` to dispatch the Telegram message instantly, then a `no_agent=True` cron job polls `gate_poller.py` every 10 minutes. The agent is never blocked waiting at a gate, so the 24-hour session reset cannot occur mid-gate. If the session resets while waiting, Phase 0 resumes the gate decision from `kakis_state.json`.
+- **Cron poller silence:** The `gate_poller.py` script exits silently when there is no new reply, so the cron delivers nothing (no noise). It only delivers `DECISION: ...` when a recognized reply is found, and then stops polling via the `.decided` sentinel file.
 - **Bob dispatch missing:** If `bob_dispatch.py` doesn't exist, the Bob phase fails. Check prerequisites before starting.
 - **State corruption:** Write `kakis_state.json` atomically (write to `.tmp` then rename).
 - **Implicit stage contracts:** Dory outputs `final_prompt.txt`, `final_plan.txt`, `final_review.txt`; Bob expects the prompt and produces `plan.md` + `results.json`. These contracts are implicit — if either skill's output format changes, the handoff breaks. Verify artifact existence at each phase transition.

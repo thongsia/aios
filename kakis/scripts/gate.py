@@ -17,8 +17,10 @@ import sys
 import time
 from datetime import datetime, timezone
 
-APPROVE = {"proceed", "yes", "go", "continue", "ok"}
-REJECT = {"stop", "no", "abort", "cancel", "halt"}
+APPROVE = {"proceed", "yes", "go", "continue", "ok", "okay", "sure",
+           "do it", "agree", "approve", "forward", "next", "yep", "yea", "yup"}
+REJECT = {"stop", "no", "abort", "cancel", "halt", "skip", "nah",
+           "decline", "reject", "dont", "don't", "later", "not now", "pass"}
 
 def _env(path: str) -> str | None:
     """Read env var from ~/.hermes/.env."""
@@ -87,88 +89,29 @@ def send_notification(message: str, workspace: str, attachment_path: str = None)
         log_notification(workspace, f"[TELEGRAM BYPASS] {message}")
     return ok
 
-def _get_telegram_updates(offset: int | None, limit: int = 1) -> list:
-    """Poll Telegram getUpdates API directly."""
-    token = _read_env("TELEGRAM_BOT_TOKEN")
-    if not token:
-        return []
-    url = f"https://api.telegram.org/bot{token}/getUpdates"
-    params = f"limit={limit}"
-    if offset is not None:
-        params += f"&offset={offset}"
-    try:
-        result = subprocess.run(
-            ["curl", "-s", f"{url}?{params}", "--max-time", "15"],
-            capture_output=True, text=True, timeout=20,
-        )
-        if result.returncode != 0:
-            return []
-        data = json.loads(result.stdout)
-        if data.get("ok"):
-            return data.get("result", [])
-    except (FileNotFoundError, json.JSONDecodeError, subprocess.TimeoutExpired, Exception):
-        pass
-    return []
+def classify_reply(text: str) -> str:
+    """Classify a reply as proceed/abort/unrecognized."""
+    t = text.strip().lower()
+    if any(k in t for k in APPROVE):
+        return "proceed"
+    if any(k in t for k in REJECT):
+        return "abort"
+    return "unrecognized"
 
-def poll_telegram_reply(workspace: str, timeout: int = 3600, run_id: str = "") -> str:
-    """Poll for reply via Telegram Bot API. Returns proceed/abort/timeout."""
-    offset_file = os.path.expanduser(f"~/.hermes/kakis-offsets/{run_id}.offset") if run_id else None
-    offset = None
-    if offset_file:
-        try:
-            os.makedirs(os.path.dirname(offset_file), exist_ok=True)
-            if os.path.exists(offset_file):
-                offset = int(open(offset_file).read().strip())
-        except Exception:
-            offset = None
 
-    start = time.time()
-    reprompted = False
+def gate(message: str, workspace: str, send_only: bool = True) -> str:
+    """Send gate message via Telegram. Returns 'sent' or 'bypass'.
 
-    while time.time() - start < timeout:
-        updates = _get_telegram_updates(offset, limit=10)
-        if updates:
-            for u in updates:
-                update_id = u.get("update_id", offset)
-                msg = u.get("message", {})
-                # Save offset
-                if offset_file and update_id:
-                    try:
-                        with open(offset_file, "w") as f:
-                            f.write(str(update_id + 1))
-                    except Exception:
-                        pass
-                text = (msg.get("text") or "").strip().lower()
-                if not text:
-                    continue
-                # Check for run_id token match (fallback)
-                if run_id and run_id not in (msg.get("reply_to_message", {}).get("text", "") or ""):
-                    # Check if message contains run_id as token
-                    if run_id not in text:
-                        continue
-                if any(k in text for k in APPROVE):
-                    return "proceed"
-                if any(k in text for k in REJECT):
-                    return "abort"
-                # Unrecognized — re-prompt once
-                if not reprompted:
-                    send_telegram("Reply with 'proceed' or 'stop'.")
-                    reprompted = True
-                    return poll_telegram_reply(workspace, timeout, run_id)
-            break
-        time.sleep(30)
-
-    log_notification(workspace, "[TIMEOUT] No reply within 1 hour — auto-proceeding.")
-    return "timeout"
-
-def gate(message: str, workspace: str, timeout: int = 3600, run_id: str = "") -> str:
-    """Send gate message, poll for reply, return decision.
-    On Telegram failure, auto-proceeds with bypass logged."""
+    Gates do NOT poll the Telegram Bot API (the Hermes gateway consumes
+    all updates). Instead, the agent sends the message, saves gate_waiting
+    in kakis_state.json, and stops. When the user replies, the Hermes
+    gateway delivers it to the agent, which classifies it via classify_reply().
+    """
     ok = send_telegram(message)
     if not ok:
         log_notification(workspace, f"[GATE BYPASS] {message} — Telegram unavailable, auto-proceeding.")
-        return "proceed"
-    return poll_telegram_reply(workspace, timeout, run_id)
+        return "bypass"
+    return "sent"
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="KAKIS Telegram gate helper")
@@ -177,18 +120,21 @@ if __name__ == "__main__":
     g = sub.add_parser("gate")
     g.add_argument("--message", required=True)
     g.add_argument("--workspace", required=True)
-    g.add_argument("--timeout", type=int, default=3600)
-    g.add_argument("--run-id", default="")
 
     n = sub.add_parser("notify")
     n.add_argument("--message", required=True)
     n.add_argument("--workspace", required=True)
 
+    c = sub.add_parser("classify")
+    c.add_argument("--text", required=True)
+
     args = parser.parse_args()
     if args.cmd == "gate":
-        result = gate(args.message, args.workspace, args.timeout, args.run_id)
+        result = gate(args.message, args.workspace)
         print(result)
     elif args.cmd == "notify":
         send_notification(args.message, args.workspace)
+    elif args.cmd == "classify":
+        print(classify_reply(args.text))
     else:
         parser.print_help()
