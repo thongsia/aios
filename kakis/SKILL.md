@@ -78,23 +78,31 @@ Follow these phases in order. The orchestrator agent is the one running this ski
 The gate sends a Telegram message and then the agent STOPS. The Hermes gateway
 delivers the user's reply back to the agent's session — no polling or cron needed.
 
-1. Compose a Telegram message from `dory_brief.md`: iteration count, key findings, refined prompt. Append:
+1. **Pre-emptive session compaction**: Before sending the gate message, compress the session context to free space for the execution phase. Use `terminal(command='hermes chat -q /compress --resume <SESSION_ID> --oneshot -Q')` where `<SESSION_ID>` is the current session ID (check via `terminal(command='echo $HERMES_SESSION_ID')` or from the state DB). This runs a fresh Hermes instance that compresses the session's conversation history, keeping only the essential summary. If this fails, proceed without compaction — it is never a blocker.
+2. **Schedule gate poller for auto-proceed**: Register a cron job that runs `gate_poller.py` every 10 minutes to auto-proceed after 1 hour of silence:
+   ```
+   cronjob(action='add', name='kakis-gate1-<run_id>', schedule='10m',
+     script='python3 ~/.hermes/skills/aios/kakis/scripts/gate_poller.py --workspace <run_workspace>',
+     no_agent=True, deliver='telegram', repeat=6)
+   ```
+   Use `repeat=6` (60 minutes of polling) and `deliver='telegram'` so the user is notified when auto-proceed fires.
+3. Compose a Telegram message from `dory_brief.md`: iteration count, key findings, refined prompt. Append:
    ```
    Reply with '/kakis proceed' to continue or '/kakis stop' to abort.
    ```
    The `/kakis` prefix is required — it loads the skill in the new session so Phase 0
    finds `gate_waiting: true` in state and classifies the reply.
-2. Send the gate message:
+4. Send the gate message (this records `gate_timestamp` for the poller):
    ```
-   python3 ~/.hermes/skills/kakis/scripts/gate.py gate \
+   python3 ~/.hermes/skills/aios/kakis/scripts/gate.py gate \
      --message "<message>" --workspace <run_workspace>
    ```
-3. Update `kakis_state.json`: set `gate_waiting: true`.
-4. The agent STOPS. When the user replies on Telegram, the Hermes gateway
+5. Update `kakis_state.json`: set `gate_waiting: true`.
+6. The agent STOPS. When the user replies on Telegram, the Hermes gateway
    delivers the reply to this session. The agent resumes from Phase 0:
    - Classify the reply using `classify_reply()` (or inline keyword check).
-   - If `proceed`: set `gate_waiting: false`, proceed to Phase 2.
-   - If `abort`: set phase `aborted`, notify the user, and stop.
+   - If `proceed`: set `gate_waiting: false`, remove the cron poller (`cronjob(action='remove', name='kakis-gate1-<run_id>')`), proceed to Phase 2.
+   - If `abort`: set phase `aborted`, remove the cron poller, notify the user, and stop.
    - If `unrecognized`: send "I did not understand '...'. Reply with proceed or stop." and stop again.
 
 **Completion:** Gate decision recorded; pipeline proceeds or aborts.
@@ -117,13 +125,22 @@ delivers the user's reply back to the agent's session — no polling or cron nee
 ### Gate 2 — Bob to Execute
 
 Same pattern as Gate 1:
-1. Compose a Telegram message from `bob_brief.md`: harnesses used, best harness, score, plan step count. Append:
+1. **Pre-emptive session compaction**: Same as Gate 1 — compress session context before waiting.
+2. **Schedule gate poller for auto-proceed**: Same as Gate 1 but named `kakis-gate2-<run_id>`:
+   ```
+   cronjob(action='add', name='kakis-gate2-<run_id>', schedule='10m',
+     script='python3 ~/.hermes/skills/aios/kakis/scripts/gate_poller.py --workspace <run_workspace>',
+     no_agent=True, deliver='telegram', repeat=6)
+   ```
+3. Compose a Telegram message from `bob_brief.md`: harnesses used, best harness, score, plan step count. Append:
    ```
    Reply with '/kakis proceed' to continue or '/kakis stop' to abort.
    ```
-2. Send the gate message (same command as Gate 1).
-3. Update `kakis_state.json`: set `gate_waiting: true`.
-4. Agent STOPS. When the user replies, Hermes delivers it to the session. Phase 0 classifies the reply.
+4. Send the gate message (same command as Gate 1).
+5. Update `kakis_state.json`: set `gate_waiting: true`.
+6. Agent STOPS. When the user replies, Hermes delivers it to the session. Phase 0 classifies the reply:
+   - If `proceed`: set `gate_waiting: false`, remove cron poller (`cronjob(action='remove', name='kakis-gate2-<run_id>')`), advance to Phase 3.
+   - If `abort`: set phase `aborted`, remove cron poller, notify, and stop.
 
 **Completion:** Gate decision recorded; pipeline proceeds or aborts.
 
@@ -167,10 +184,10 @@ When Telegram is unavailable, fall back to writing the notification to `notifica
 - **Recursion:** Execution subagents must be told not to load the kakis skill. Without this, they re-enter the pipeline.
 - **Concurrent runs:** Always use timestamped workspaces (`<slug>_<timestamp>`) to avoid artifact collision.
 - **Dory artifact discovery:** Scan the workspace for the latest `plan_*.txt`/`prompt_*.txt`/`review_*.txt` — never assume a specific N.
-- **Dual reply matching in gates:** `gate.py` uses two strategies — `reply_to_message_id` (Telegram reply chain) and run-token matching (e.g., `kakis-{run_id}` embedded in the gate message). This survives concurrent Telegram activity. If building custom gates, follow this same pattern.
-- **Per-run offset storage:** `gate.py` and `gate_poller.py` store `getUpdates` offsets per run in `~/.hermes/kakis-offsets/{run_id}.offset` to prevent race conditions between concurrent runs.
-- **Non-blocking gates:** Gates use `--send-only` to dispatch the Telegram message instantly, then a `no_agent=True` cron job polls `gate_poller.py` every 10 minutes. The agent is never blocked waiting at a gate, so the 24-hour session reset cannot occur mid-gate. If the session resets while waiting, Phase 0 resumes the gate decision from `kakis_state.json`.
-- **Cron poller silence:** The `gate_poller.py` script exits silently when there is no new reply, so the cron delivers nothing (no noise). It only delivers `DECISION: ...` when a recognized reply is found, and then stops polling via the `.decided` sentinel file.
+- **Dual reply matching in gates:** `gate.py` records `gate_timestamp` in `kakis_state.json` on every gate send, so the poller can measure elapsed time.
+- **Gate auto-proceed via cron:** On entering a gate, the agent schedules a `no_agent=True` cron job (`kakis-gate<N>-<run_id>`) that runs `gate_poller.py` every 10 minutes for 1 hour (`repeat=6`). After 3600s of silence the poller sets `gate_waiting: false`, advances the phase, writes a `.gate_decided` sentinel, and stops. On manual reply, remove the cron poller immediately.
+- **Session compaction at gates:** Before stopping at a gate, compress the session via `hermes chat -q /compress --resume <SESSION_ID> --oneshot -Q`. This frees context for the execution phase. If it fails, continue — it is never a blocker.
+- **Per-run offset storage:** `gate_poller.py` uses a `.gate_decided` sentinel (per workspace) to prevent duplicate auto-proceeds.
 - **Bob dispatch missing:** If `bob_dispatch.py` doesn't exist, the Bob phase fails. Check prerequisites before starting.
 - **State corruption:** Write `kakis_state.json` atomically (write to `.tmp` then rename).
 - **Implicit stage contracts:** Dory outputs `final_prompt.txt`, `final_plan.txt`, `final_review.txt`; Bob expects the prompt and produces `plan.md` + `results.json`. These contracts are implicit — if either skill's output format changes, the handoff breaks. Verify artifact existence at each phase transition.

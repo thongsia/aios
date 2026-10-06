@@ -99,14 +99,36 @@ def classify_reply(text: str) -> str:
     return "unrecognized"
 
 
+def _load_state(workspace: str) -> dict:
+    path = os.path.join(workspace, "kakis_state.json")
+    with open(path) as f:
+        return json.load(f)
+
+def _save_state(workspace: str, state: dict) -> None:
+    """Atomic write — write to .tmp then rename."""
+    path = os.path.join(workspace, "kakis_state.json")
+    tmp = path + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(state, f, indent=2)
+    os.rename(tmp, path)
+
+
 def gate(message: str, workspace: str, send_only: bool = True) -> str:
     """Send gate message via Telegram. Returns 'sent' or 'bypass'.
+
+    Records gate_timestamp in kakis_state.json so the gate_poller can
+    auto-proceed after timeout.
 
     Gates do NOT poll the Telegram Bot API (the Hermes gateway consumes
     all updates). Instead, the agent sends the message, saves gate_waiting
     in kakis_state.json, and stops. When the user replies, the Hermes
     gateway delivers it to the agent, which classifies it via classify_reply().
     """
+    # Record gate timestamp for auto-proceed
+    state = _load_state(workspace)
+    state["gate_timestamp"] = datetime.now(timezone.utc).isoformat()
+    _save_state(workspace, state)
+
     ok = send_telegram(message)
     if not ok:
         log_notification(workspace, f"[GATE BYPASS] {message} — Telegram unavailable, auto-proceeding.")
