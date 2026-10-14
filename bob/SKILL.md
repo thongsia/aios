@@ -29,17 +29,19 @@ Missing harnesses are gracefully skipped. A minimum of 2 available harnesses is 
 
 ```bash
 # Run all available harnesses
-python3 ~/.hermes/skills/bob/scripts/bob_dispatch.py --prompt "Build a REST API with FastAPI"
+python3 ~/.hermes/skills/aios/bob/scripts/bob_dispatch.py --prompt "Build a REST API with FastAPI"
 
 # Run specific harnesses only
-python3 ~/.hermes/skills/bob/scripts/bob_dispatch.py --prompt "..." --harnesses opencode,hermes
+python3 ~/.hermes/skills/aios/bob/scripts/bob_dispatch.py --prompt "..." --harnesses opencode,hermes
 
 # Custom timeout (default 600s)
-python3 ~/.hermes/skills/bob/scripts/bob_dispatch.py --prompt "..." --timeout 300
+python3 ~/.hermes/skills/aios/bob/scripts/bob_dispatch.py --prompt "..." --timeout 300
 
 # Clean up previous workspace
-python3 ~/.hermes/skills/bob/scripts/bob_dispatch.py --cleanup
+python3 ~/.hermes/skills/aios/bob/scripts/bob_dispatch.py --cleanup
 ```
+
+This environment installs the skill under the `aios/` category (`~/.hermes/skills/aios/bob/`); if a path below looks wrong, resolve scripts relative to the skill's actual install directory.
 
 ## Configuration
 
@@ -146,7 +148,7 @@ The notification uses `hermes send --to telegram` and is silently skipped on fai
 ## File Structure
 
 ```
-~/.hermes/skills/bob/
+~/.hermes/skills/aios/bob/
 ├── SKILL.md
 ├── scripts/
 │   ├── bob_dispatch.py         # Main orchestrator

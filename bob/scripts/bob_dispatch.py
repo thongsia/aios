@@ -49,7 +49,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Bob: fan-out/fan-in planning orchestrator")
     parser.add_argument("--prompt", "-p", type=str, help="User prompt to dispatch")
     parser.add_argument("--cleanup", action="store_true", help="Clean up previous workspace")
-    parser.add_argument("--timeout", type=int, default=900, help="Per-harness timeout (seconds)")
+    parser.add_argument("--timeout", type=int, default=1800, help="Per-harness timeout (seconds)")
     parser.add_argument("--harnesses", type=str, default="",
                         help="Comma-separated list of harnesses (default: all available)")
     parser.add_argument("--min-success", type=int, default=1,
