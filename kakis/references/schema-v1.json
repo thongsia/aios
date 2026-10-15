@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "kakis-memory schema v1",
+  "description": "Document schemas for the KAKIS pipeline memory in OpenSearch (indices kakis_runs, kakis_artifacts, kakis_calls, behind aliases of the same names). Written by kakis_export.py; read by any agent.",
+  "schema_version": "v1",
+  "doc_id_conventions": {
+    "kakis_runs": "id = run_id (workspace directory name, '<slug>_<YYYYMMDDHHMMSS>')",
+    "kakis_artifacts": "id = sha256_hex(run_id + '|' + path)  (deterministic; upserts on re-export)",
+    "kakis_calls": "id = run_id + '|call|' + seq + '|' + module"
+  },
+  "enums": {
+    "phase": ["research", "gate0", "dory", "gate1", "bob", "gate2", "execute", "completed", "aborted", "unknown"],
+    "kind": ["state", "feasibility", "prompt", "plan", "review", "brief", "bob_plan", "bob_results", "bob_log", "gate_message", "notification", "call_log", "log", "execution_report", "device", "data", "other"],
+    "module": ["igor", "dory_planner", "dory_reviewer", "dory_saturation", "bob_harness", "bob_synth", "compress", "execution_batch", "gate_poller", "other"],
+    "gate_decision": ["proceed", "abort", "auto_proceed", "pending"],
+    "call_status": ["ok", "failed", "timeout"]
+  },
+  "conventions": [
+    "content policy: text artefacts <= 512KiB carry full `content`; larger text carries only `head` (first 2KiB) + sha256; binary carries only metadata. `original_path` always points at the canonical local copy.",
+    "path prefix: run-workspace files use bare relative paths; Dory sub-workspace files use 'dory/...'; Bob sub-workspace files use 'bob/...' (per-harness `home/` sandboxes are never mirrored — per-harness raw output is inside bob_results.json raw_stdout).",
+    "timestamps: ISO8601 with offset. Legacy naive timestamps (pre-2026-10-14 state files) are assumed +08:00 local wall clock.",
+    "calls: seq is per-run monotonic. Reconstructed calls (legacy runs without calls.jsonl) carry 'reconstructed' in notes. Bob harness calls have variant=<harness name>.",
+    "run_doc.gates: per-gate decision/scope note; decided_at is null in v1 (per-gate timestamps not stored in state).",
+    "write policy: only kakis_export.py writes these indices. All other agents are read-only."
+  ],
+  "schemas": {
+    "run": {
+      "type": "object",
+      "required": ["run_id"],
+      "properties": {
+        "run_id": {"type": "string"},
+        "slug": {"type": "string"},
+        "goal": {"type": ["string", "null"]},
+        "phase": {"type": "string", "enum": ["research", "gate0", "dory", "gate1", "bob", "gate2", "execute", "completed", "aborted", "unknown"]},
+        "status": {"type": "string", "enum": ["completed", "aborted", "in_progress"]},
+        "feasibility_verdict": {"type": ["string", "null"], "enum": ["GO", "RISKY", "NO-GO", null]},
+        "gates": {
+          "type": ["object", "null"],
+          "properties": {
+            "gate0": {"$ref": "#/$defs/gate"},
+            "gate1": {"$ref": "#/$defs/gate"},
+            "gate2": {"$ref": "#/$defs/gate"}
+          }
+        },
+        "created_at": {"type": ["string", "null"], "format": "date-time"},
+        "updated_at": {"type": ["string", "null"], "format": "date-time"},
+        "dory_iterations": {"type": ["integer", "null"]},
+        "bob_harness_count": {"type": ["integer", "null"]},
+        "bob_best_harness": {"type": ["string", "null"]},
+        "bob_best_score": {"type": ["number", "null"]},
+        "completed_steps": {"type": "integer"},
+        "total_steps": {"type": ["integer", "null"]},
+        "run_workspace": {"type": "string"},
+        "dory_workspace": {"type": ["string", "null"]},
+        "bob_workspace": {"type": ["string", "null"]},
+        "artifact_count": {"type": "integer"},
+        "call_count": {"type": "integer"},
+        "error_summary": {"type": ["string", "null"]}
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "required": ["run_id", "path", "kind"],
+      "properties": {
+        "run_id": {"type": "string"},
+        "path": {"type": "string", "description": "relative path; dory/ and bob/ prefixes for sub-workspaces"},
+        "original_path": {"type": "string", "description": "canonical local absolute path"},
+        "kind": {"type": "string", "enum": ["state", "feasibility", "prompt", "plan", "review", "brief", "bob_plan", "bob_results", "bob_log", "gate_message", "notification", "call_log", "log", "execution_report", "device", "data", "other"]},
+        "phase": {"type": "string"},
+        "module": {"type": ["string", "null"]},
+        "size_bytes": {"type": "integer"},
+        "sha256": {"type": "string"},
+        "mtime": {"type": ["string", "null"], "format": "date-time"},
+        "content": {"type": "string", "description": "full text; present only for text <= 512KiB"},
+        "head": {"type": "string", "description": "first 2KiB; present for all text files"}
+      }
+    },
+    "call": {
+      "type": "object",
+      "required": ["run_id", "seq", "module", "status"],
+      "properties": {
+        "run_id": {"type": "string"},
+        "seq": {"type": "integer"},
+        "module": {"type": "string", "enum": ["igor", "dory_planner", "dory_reviewer", "dory_saturation", "bob_harness", "bob_synth", "compress", "execution_batch", "gate_poller", "other"]},
+        "variant": {"type": ["string", "null"], "description": "harness name for bob_harness; batch label for execution_batch"},
+        "iteration": {"type": ["integer", "null"], "description": "Dory iteration number"},
+        "input_refs": {"type": "array", "items": {"type": "string"}},
+        "output_refs": {"type": "array", "items": {"type": "string"}},
+        "status": {"type": "string", "enum": ["ok", "failed", "timeout"]},
+        "goal": {"type": ["string", "null"]},
+        "result_summary": {"type": ["string", "null"]},
+        "notes": {"type": ["string", "null"]},
+        "started_at": {"type": ["string", "null"], "format": "date-time"},
+        "ended_at": {"type": ["string", "null"], "format": "date-time"}
+      }
+    }
+  },
+  "$defs": {
+    "gate": {
+      "type": "object",
+      "properties": {
+        "decision": {"type": ["string", "null"], "enum": ["proceed", "abort", "auto_proceed", "pending", null]},
+        "decided_at": {"type": ["string", "null"], "format": "date-time"},
+        "scope_note": {"type": ["string", "null"], "description": "user's appended instruction on the gate reply"},
+        "auto_proceeded": {"type": "boolean"}
+      }
+    }
+  }
+}
