@@ -1,4 +1,6 @@
-# aios — AI Orchestration Skillset for human-in-the-loop agentic workflows
+# AIOS — AI Orchestration Skillset for human-in-the-loop agentic workflows
+
+_Disclaimer: This is very much a work-in-progress. It captures my research interest in an eco-system of skillful agents, where skills can be learned, honed, and recalled. The orchestration skillset is the beginning. The eventual goal is an AI Operating System -- the real AIOS._
 
 A skillset for Hermes Agent that chains AI agents into a structured,
 human-in-the-loop planning-and-execution pipeline, with every run mirrored
