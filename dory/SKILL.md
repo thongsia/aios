@@ -1,7 +1,7 @@
 ---
 name: Dory
 description: "Use for iterative plan-review cycles until saturation."
-version: 1.1.1
+version: 1.1.2
 author: Hermes Agent
 license: MIT
 metadata:
@@ -11,6 +11,8 @@ metadata:
 ---
 
 # Forgetful Planner
+
+The name is deliberate: the subplanner is repeatedly tasked to plan the spec from a new prompt, and every time she does so without memory of previous runs — a fresh context on each dispatch, by design, so the prompt alone must carry the specification.
 
 Orchestrate an iterative planning workflow that refines a user's request through repeated planning and review cycles until theoretical saturation is reached.
 
@@ -161,8 +163,6 @@ OUTPUT FORMAT for review file:
 [Brief explanation of key decisions]
 ```
 
-**Note:** the subagent only needs `file` read/write. `delegate_task` has no per-call toolset parameter, so the child inherits the orchestrator's toolsets (which include `file`); no extra toolsets are required.
-
 #### Step 3 — Check Theoretical Saturation
 
 Read `~/workspace/<TASK_FOLDER>/prompt_N.txt`.
@@ -231,8 +231,6 @@ Write a concise diagnosis (max 30 lines) with:
 - CONTRIBUTING FACTORS: [secondary issues]
 - SKILL IMPROVEMENTS: [specific changes to the Dory skill that would prevent this next time]
 ```
-
-**Note:** the subagent only needs `file` read/write. `delegate_task` has no per-call toolset parameter, so the child inherits the orchestrator's toolsets (which include `file`); no extra toolsets are required.
 
 Wait for the Sub-Analyst to complete.
 
