@@ -2,7 +2,7 @@
 
 _Disclaimer: This is very much a work-in-progress. It captures my research interest in an eco-sysñtem of skillful agents, where skills can be learned, honed, and recalled. The orchestration skillset is the beginning. The eventual goal is an AI Operating System -- the real AIOS._
 
-AIOS is a skillset developed on Hermes Agent harness that chains AI agents into a semi-autonomus, human-in-the-loop planning-and-execution pipeline. Its aim is to turn a human curiosity or goal into results, in a high quality way. Every run is mirrored into OpenSearch as searchable long-term memory. 
+AIOS is a skillset developed on Hermes Agent harness that chains AI agents into a semi-autonomous, human-in-the-loop planning-and-execution pipeline. Its aim is to turn a human curiosity or goal into results, in a high quality way. Every run is mirrored into OpenSearch as searchable long-term memory. 
 
 Each skill is a `SKILL.md` (procedural memory loaded on demand by the agent)
 plus optional scripts. No build step — clone into your skills directory and
@@ -12,10 +12,10 @@ the agent picks them up.
 
 | Skill | Version | What it does |
 |---|---|---|
-| [`kakis`](kakis/) | 0.4.0 | The orchestrator: Igor → Dory → Bob → Execute, with three Telegram decision gates |
-| [`igor`](igor/) | 1.0.0 | Feasibility research assistant: a single research subagent produces a GO / RISKY / NO-GO verdict |
-| [`dory`](dory/) | 1.0.0 | Iterative plan-review loop (subplanner ↔ subreviewer) until saturation. Outputs specs as a prompt |
-| [`bob`](bob/) | 1.0.0 | Fan-out/fan-in: dispatch a prompt to multiple AI coding agents, synthesize the best-of-breed plan |
+| [`kakis`](kakis/) | 0.4.0 | The orchestrator: Igor → Dory → Bob → Execute, with three Telegram decision gates. User supplies a goal, kakis does the rest. |
+| [`igor`](igor/) | 1.0.0 | Feasibility research assistant: a single research subagent produces a GO / RISKY / NO-GO verdict. TODO: Recall |
+| [`dory`](dory/) | 1.0.0 | Iterative plan-review loop (subplanner ↔ subreviewer) until theoretical saturation as a stop loop signal. Outputs specs as a prompt |
+| [`bob`](bob/) | 1.0.0 | Fan-out/fan-in: dispatch a prompt to multiple AI coding agents to produce individual plans, synthesize a best-of-breed plan. Not merge, but pick the best and augment with the rest. |
 | [`kakis_memory`](kakis_memory/) | 1.0.0 | Access protocol for the OpenSearch mirror — how any other agent discovers and queries pipeline history |
 | [`prompt-writing`](prompt-writing/) | 1.0.0 | Production-grade prompt patterns (Anthropic canonical style) |
 
