@@ -1,8 +1,10 @@
 ---
 name: Bob
 description: "Fan-out/fan-in planning: dispatch a prompt to multiple AI coding agents, collect and synthesize a best-of-breed implementation plan."
-version: 1.1.0
+version: 1.1.1
 author: Hermes Agent
+license: MIT
+platforms: [linux, macos]
 ---
 
 ## Overview
@@ -23,7 +25,7 @@ Bob is a fan-out/fan-in planning orchestrator. Given a user prompt, it dispatche
 | Qwen Code | `qwen` | Optional (skipped if not installed) |
 | DeepSeek Harness | `dsh` | Optional (skipped if not installed) |
 
-Missing harnesses are gracefully skipped. A minimum of 2 available harnesses is required for synthesis.
+Missing harnesses are gracefully skipped. Synthesis needs at least one usable harness — zero usable output aborts the run (see Partial Failure Tolerance).
 
 ## Programmatic Invocation
 
@@ -115,10 +117,11 @@ User prompt
 
 ## Recursion Guard
 
-All Hermes invocations (adapter dispatch + synthesis) use:
+All Hermes invocations use:
 - `HERMES_PROFILE=bob-worker` — dedicated profile with isolated session store
 - `--ignore-rules` — prevents loading skills, AGENTS.md, memory
-- `--max-turns 1` — prevents tool-calling loops
+
+The synthesizer's eval and augment subprocesses additionally run with `--max-turns 1`; the harness adapters dispatch without it, so a harness may use multiple turns.
 
 This ensures the Bob skill does NOT load in any child Hermes process.
 
@@ -137,9 +140,9 @@ Output files per run:
 
 ## Partial Failure Tolerance
 
-- If 2+ harnesses produce usable output (status `ok` or `partial`), synthesis proceeds with what's available
-- If fewer than 2 are usable, the workflow aborts with per-harness error reasons
-- Failed synthesis falls back to the highest-scoring individual plan
+- Zero usable harnesses (status `ok` or `partial`) → the run aborts with per-harness error reasons.
+- One or more usable harnesses → synthesis proceeds with what's available; if the count is below `--min-success` (default 1), Bob logs a warning and continues anyway.
+- Failed synthesis falls back to the highest-scoring individual plan.
 
 ## Completion Notification
 
