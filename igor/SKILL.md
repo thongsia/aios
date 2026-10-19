@@ -1,13 +1,13 @@
 ---
 name: Igor
 description: "Use for feasibility research: go/risky/no-go verdict."
-version: 1.0.0
+version: 1.0.1
 author: Hermes Agent
 license: MIT
 metadata:
   hermes:
     tags: [research, feasibility, go-no-go, pre-planning, multi-agent]
-    related_skills: [Dory, bob, kakis]
+    related_skills: [Dory, Bob, KAKIS]
 ---
 
 # Igor — Feasibility Researcher
@@ -99,7 +99,7 @@ REPORT FORMAT (max 40 lines):
 
 STRICT RULES:
 - RESEARCH ONLY. Do NOT plan, do NOT write code, do NOT execute the goal.
-- Do NOT load or invoke the kakis (pipeline), Dory, or bob skills.
+- Do NOT load or invoke the KAKIS (pipeline), Dory, or Bob skills.
 - Do NOT modify any files other than writing feasibility.md.
 
 Goal: <original goal>
@@ -118,7 +118,7 @@ Confirm `<workspace>/feasibility.md` exists and contains a `=== FEASIBILITY:` li
 
 1. **Fabricated verdict.** If the researcher times out or returns no valid verdict, fall back to `RISKY` with the uncertainty noted — never invent a GO/NO-GO.
 2. **Researcher drifts into planning or overflows the line cap.** The STRICT RULES forbid planning/code/execution and the report must be ≤ 40 lines, but the researcher often appends an extra reference section (e.g. a "deployment shape" command block) that pushes it over. The orchestrator owns the cap: trim the report to the verdict + Rationale/Unknowns/Dependencies/Risks sections before delivery, or re-dispatch with a stronger "research only" instruction.
-3. **Recursion / re-entering the pipeline.** The researcher must not load kakis, Dory, or bob. Without the guard, a delegated subagent can re-enter the full pipeline.
+3. **Recursion / re-entering the pipeline.** The researcher must not load KAKIS, Dory, or Bob. Without the guard, a delegated subagent can re-enter the full pipeline.
 4. **Double Telegram in orchestrated mode.** When KAKIS invokes Igor, Igor must NOT send its own notification — KAKIS sends the gate. A double message confuses the user. Gate the delivery on the mode (Step 3).
 5. **Workspace collision.** Standalone uses `~/workspace/igor_<slug>_<timestamp>/`; orchestrated uses the orchestrator's run workspace. Never create a new workspace when an orchestrator already supplied one.
 6. **Local checks go beyond read-only.** The researcher may run read-only terminal checks to verify prerequisites (e.g., `which opencode`, `test -f ~/.hermes/.env`) but must not install, modify, or create anything except feasibility.md.
@@ -132,4 +132,4 @@ Confirm `<workspace>/feasibility.md` exists and contains a `=== FEASIBILITY:` li
 - [ ] Report has Rationale, Key Unknowns, Dependencies, Top Risks sections
 - [ ] Report is ≤ 40 lines
 - [ ] Standalone: Telegram notification sent and exit code 0; Orchestrated: no notification
-- [ ] Researcher did not load kakis/Dory/bob and did not write code or modify files
+- [ ] Researcher did not load KAKIS/Dory/Bob and did not write code or modify files

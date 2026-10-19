@@ -1,14 +1,14 @@
 ---
 name: kakis_memory
 description: "Use when any agent needs past KAKIS pipeline runs or plans."
-version: 1.0.0
+version: 1.0.1
 author: Hermes Agent
 license: MIT
 platforms: [linux, macos]
 metadata:
   hermes:
     tags: [memory, opensearch, kakis, retrieval, long-term-memory]
-    related_skills: [kakis, Dory, bob, Igor]
+    related_skills: [KAKIS, Dory, Bob, Igor]
 ---
 
 # KAKIS Memory (OpenSearch)

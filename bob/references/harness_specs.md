@@ -27,7 +27,7 @@ Per-harness CLI flags, binary names, verified commands, and quirks.
 | **Alternative** | `hermes chat -q 'PROMPT' -Q` (chat query, quiet) |
 | **Key flags** | `-m MODEL`, `--provider PROVIDER`, `--reasoning LEVEL`, `-s SKILLS`, `-Q/--quiet`, `--max-turns N`, `--ignore-rules`, `--ignore-user-config`, `--yolo` |
 | **Profile selection** | `HERMES_PROFILE=name` env var (no `--profile` CLI flag on `chat`) |
-| **Recursion guard** | `HERMES_PROFILE=bob-worker` + `--ignore-rules` prevents bob skill from loading |
+| **Recursion guard** | `HERMES_PROFILE=bob-worker` + `--ignore-rules` prevents the Bob skill from loading |
 | **Auth** | `~/.hermes/.env` and `~/.hermes/config.yaml`; profiles inherit via `--clone` |
 | **Config dir** | `~/.hermes/` (or per-profile `~/.hermes/profiles/NAME/`) |
 | **Verified** | `hermes --version`; `hermes chat --help` confirms all flags |

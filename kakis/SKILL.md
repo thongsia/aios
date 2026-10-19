@@ -1,14 +1,14 @@
 ---
-name: kakis
+name: KAKIS
 description: "Research→Dory→Bob→execute orchestration with Telegram gates."
-version: 0.5.0
+version: 0.6.0
 author: Hermes Agent
 license: MIT
 platforms: [linux, macos]
 metadata:
   hermes:
     tags: [planning, multi-agent, delegation, orchestration, workflow]
-    related_skills: [Igor, Dory, bob]
+    related_skills: [Igor, Dory, Bob]
 ---
 
 # KAKIS Workflow Skill
@@ -30,7 +30,7 @@ Don't use for:
 
 - Igor skill installed and functional (`skill_view(name='Igor')`).
 - Dory skill installed and functional (`skill_view(name='Dory')`).
-- Bob skill installed at `~/.hermes/skills/aios/bob/` with at least one working harness (`skill_view(name='bob')`).
+- Bob skill installed at `~/.hermes/skills/aios/bob/` with at least one working harness (`skill_view(name='Bob')`).
 - Telegram configured in `~/.hermes/.env` (`TELEGRAM_BOT_TOKEN`, `TELEGRAM_HOME_CHANNEL`).
 - `hermes send --to telegram` delivers messages (exit code 0).
 - OpenSearch memory mirror (best-effort, never a prerequisite): the cluster (base URL from `AIOS_OPENSEARCH` in the process env or `~/.hermes/.env` — no built-in default; if unset, the export no-ops) reachable so `kakis_export.py` can mirror run artefacts for other agents. The pipeline must never depend on it — see Memory export.
@@ -157,7 +157,7 @@ delivers the user's reply back to the agent's session — no polling or cron nee
 
 ### Phase 2 — Bob Synthesis
 
-1. Invoke Bob's dispatch CLI with Dory's refined prompt. Run it as a tracked background process with output logged to the run workspace, and pass an explicit `--timeout` at or above Bob's per-harness default (1800s, documented in the bob skill) for long or complex prompts — values below it let every harness time out on a complex prompt, leaving Bob with no usable output:
+1. Invoke Bob's dispatch CLI with Dory's refined prompt. Run it as a tracked background process with output logged to the run workspace, and pass an explicit `--timeout` at or above Bob's per-harness default (1800s, documented in the Bob skill) for long or complex prompts — values below it let every harness time out on a complex prompt, leaving Bob with no usable output:
    ```
    terminal(command='cd <run_workspace> && python3 ~/.hermes/skills/aios/bob/scripts/bob_dispatch.py --prompt "$(cat final_prompt.txt)" --timeout 1800 > bob_dispatch.log 2>&1', background=true, notify=true)
    ```
@@ -203,7 +203,7 @@ Same pattern as Gate 1 (same wrapper-script recipe, `check` subcommand, `gate` f
    - Skip if all its step indices are already in `completed_steps` (resume).
    - Delegate via `delegate_task` with the batch description as the goal and context: original KAKIS goal, the briefs (`dory_brief.md`, `bob_brief.md`) for background, the previous unit's output file path (primary input), and the `bob_plan.md` step-level detail for this batch only. Append the open `calls.jsonl` record (`module: execution_batch`, `variant: <batch label>`) before dispatching.
    - **Override plan-local paths:** Bob's plan often pins output paths inside its ephemeral `~/.hermes/bob-workspaces/bob_<uuid>/` workspace, which is cleaned on the next Bob invocation. Redirect all deliverables to the KAKIS run workspace; treat the plan's own paths as hints only.
-   - **Recursion guard:** Explicitly instruct the subagent: "DO NOT load or invoke the kakis skill."
+   - **Recursion guard:** Explicitly instruct the subagent: "DO NOT load or invoke the KAKIS skill."
    - **Plan-vs-facts discrepancies:** Tell the subagent to verify the plan's stated facts against sources/data and, on a discrepancy, implement the plan as specified while logging the discrepancy with a citation per item (e.g. a timeline/audit table) — never silently rewrite the design, because downstream steps depend on the plan's design choices (including its stylized case-study constructs). Record the flags in state (e.g. `batch_a_notes`) for the Phase 4 notification.
    - On success: add the batch's step indices to `completed_steps`, update `kakis_state.json`, and append the closed `calls.jsonl` record for this batch (status, summary = key outcomes, output_refs = files written).
    - On failure: retry once. If the retry fails, skip the batch, log the error, and continue.
@@ -240,7 +240,7 @@ When Telegram is unavailable, fall back to writing the notification to `notifica
 - **Subplanner writes implementation, not spec** — the #1 failure mode. Fix the subplanner prompt (see step 5 of Phase 1), don't patch the plan output.
 - **Data-analysis runs carry extra discipline** — when the goal is a data analysis (econometrics, policy analysis, any goal producing numeric tables/reports from source data), load `kakis/references/data-analysis-runs.md` before Phase 1 (pre-loop data probing) and keep its verification rules in mind during execution.
 - **Delegation handoff must be inlined text:** when assembling a `delegate_task` context (Dory subplanner `PROMPT:`, reviewer `PREVIOUS REVIEW:`, execution batch context), paste the actual text of the prior artifact — shell substitutions like `$(cat prompt_N.txt)` do NOT expand inside tool-call arguments, so the subagent silently works from a literal placeholder. If it happens, stop the running subagent and re-dispatch with the text inlined.
-- **Recursion:** Execution subagents must be told not to load the kakis skill. Without this, they re-enter the pipeline. Igor's research subagent carries its own guard (in the Igor skill) — do not duplicate it here.
+- **Recursion:** Execution subagents must be told not to load the KAKIS skill. Without this, they re-enter the pipeline. Igor's research subagent carries its own guard (in the Igor skill) — do not duplicate it here.
 - **Concurrent runs:** Always use timestamped workspaces (`<slug>_<timestamp>`) to avoid artifact collision.
 - **Dory artifact discovery:** Scan the workspace for the latest `plan_*.txt`/`prompt_*.txt`/`review_*.txt` — never assume a specific N.
 - **Dual reply matching in gates:** `gate.py` records `gate_timestamp` in `kakis_state.json` on every gate send, so the poller can measure elapsed time.

@@ -1,7 +1,7 @@
 ---
-name: bob
+name: Bob
 description: "Fan-out/fan-in planning: dispatch a prompt to multiple AI coding agents, collect and synthesize a best-of-breed implementation plan."
-version: 1.0.1
+version: 1.1.0
 author: Hermes Agent
 ---
 
@@ -120,7 +120,7 @@ All Hermes invocations (adapter dispatch + synthesis) use:
 - `--ignore-rules` — prevents loading skills, AGENTS.md, memory
 - `--max-turns 1` — prevents tool-calling loops
 
-This ensures the bob skill does NOT load in any child Hermes process.
+This ensures the Bob skill does NOT load in any child Hermes process.
 
 ## Bob-worker Profile
 
