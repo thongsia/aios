@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create KAKIS OpenSearch memory indices and aliases. Idempotent.
+"""Create Kakis OpenSearch memory indices and aliases. Idempotent.
 
 Usage: kakis_indices.py [--opensearch URL]
 

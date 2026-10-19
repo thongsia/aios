@@ -1,34 +1,34 @@
 ---
 name: kakis_memory
-description: "Use when any agent needs past KAKIS pipeline runs or plans."
-version: 1.0.1
+description: "Use when any agent needs past Kakis pipeline runs or plans."
+version: 1.0.2
 author: Hermes Agent
 license: MIT
 platforms: [linux, macos]
 metadata:
   hermes:
     tags: [memory, opensearch, kakis, retrieval, long-term-memory]
-    related_skills: [KAKIS, Dory, Bob, Igor]
+    related_skills: [Kakis, Dory, Bob, Igor]
 ---
 
-# KAKIS Memory (OpenSearch)
+# Kakis Memory (OpenSearch)
 
 ## When to Use
 
-- You need a past KAKIS run: its goal, feasibility verdict, final plan, execution results, or gate decisions.
-- You are asked "what did we plan/decide/do about X" and X may have gone through the KAKIS pipeline.
+- You need a past Kakis run: its goal, feasibility verdict, final plan, execution results, or gate decisions.
+- You are asked "what did we plan/decide/do about X" and X may have gone through the Kakis pipeline.
 - You need the sub-module call trace of a run (Dory iterations, Bob harness outcomes, execution batches, failures).
-- You are the KAKIS orchestrator verifying that a run was mirrored correctly.
+- You are the Kakis orchestrator verifying that a run was mirrored correctly.
 
-Don't use for in-flight runs (local `~/.hermes/kakis-runs/` is fresher), or for topics KAKIS never touched.
+Don't use for in-flight runs (local `~/.hermes/kakis-runs/` is fresher), or for topics Kakis never touched.
 
-KAKIS pipeline runs are mirrored into a private-network OpenSearch cluster so any agent can search and retrieve pipeline history as long-term memory: goals, feasibility verdicts, Dory plans/iterations, Bob synthesis (per-harness outcomes), execution batch results, and gate decisions.
+Kakis pipeline runs are mirrored into a private-network OpenSearch cluster so any agent can search and retrieve pipeline history as long-term memory: goals, feasibility verdicts, Dory plans/iterations, Bob synthesis (per-harness outcomes), execution batch results, and gate decisions.
 
 ## Endpoint
 
 - Base URL: a private-network address (no auth — trusted network). Resolve it from `AIOS_OPENSEARCH` (process env, or set in `~/.hermes/.env` — the kakis scripts read the same setting and exit with a clear not-configured message when it is unset, so mirroring is skipped rather than erroring the run). In the examples below: `OS="${AIOS_OPENSEARCH:-http://<your-opensearch>:9200}"`.
 - Read via ALIASES only: `kakis_runs`, `kakis_artifacts`, `kakis_calls`, `kakis_meta`. Never versioned index names (`*_v1`) — they change with schema versions.
-- **Write policy: READ-ONLY for all agents.** The only writer is `kakis_export.py` (the KAKIS pipeline). There is no auth, so this convention is the only guardrail — do not index, delete, or update docs in these indices.
+- **Write policy: READ-ONLY for all agents.** The only writer is `kakis_export.py` (the Kakis pipeline). There is no auth, so this convention is the only guardrail — do not index, delete, or update docs in these indices.
 
 ## Schema discovery protocol (the contract)
 
@@ -70,4 +70,4 @@ Full copy-pasteable recipes: `kakis_meta` doc `query-cookbook` (or `~/.hermes/sk
 - **content can be absent** by design (files > 512KiB or binary). Fall back to `head` + `original_path` (local canonical copy; reachable if you run on this host).
 - **Reconstructed calls** (legacy runs) carry `reconstructed` in `notes`; they are filename-inferred, less precise than live `calls.jsonl` records.
 - **Legacy timestamps**: pre-2026-10-14 naive timestamps are assumed +08:00 local.
-- **This mirror lags the pipeline by one export** (exports run at each KAKIS phase transition + after the final notification). For an in-flight run, the local run workspace under `~/.hermes/kakis-runs/` is fresher.
+- **This mirror lags the pipeline by one export** (exports run at each Kakis phase transition + after the final notification). For an in-flight run, the local run workspace under `~/.hermes/kakis-runs/` is fresher.

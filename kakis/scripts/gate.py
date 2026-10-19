@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Telegram gate and notification helper for KAKIS workflow.
+"""Telegram gate and notification helper for Kakis workflow.
 
 Usage:
     python3 gate.py gate --message "..." --workspace /path [--timeout 3600]
@@ -136,7 +136,7 @@ def gate(message: str, workspace: str, send_only: bool = True) -> str:
     return "sent"
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="KAKIS Telegram gate helper")
+    parser = argparse.ArgumentParser(description="Kakis Telegram gate helper")
     sub = parser.add_subparsers(dest="cmd")
 
     g = sub.add_parser("gate")

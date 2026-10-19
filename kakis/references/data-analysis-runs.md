@@ -1,6 +1,6 @@
-# KAKIS reference: data-analysis runs
+# Kakis reference: data-analysis runs
 
-Load this when a KAKIS goal is a data analysis — econometrics, policy
+Load this when a Kakis goal is a data analysis — econometrics, policy
 analysis, anything producing numeric tables and reports from source
 data. Keep it in mind through execution, not just at plan time.
 

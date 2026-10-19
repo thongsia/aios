@@ -1,14 +1,14 @@
 ---
 name: Igor
 description: "Use for feasibility research: go/risky/no-go verdict."
-version: 1.0.2
+version: 1.0.3
 author: Hermes Agent
 license: MIT
 platforms: [linux, macos]
 metadata:
   hermes:
     tags: [research, feasibility, go-no-go, pre-planning, multi-agent]
-    related_skills: [Dory, Bob, KAKIS]
+    related_skills: [Dory, Bob, Kakis]
 ---
 
 # Igor — Feasibility Researcher
@@ -20,7 +20,7 @@ Assess whether a goal is buildable in the current environment before committing 
 - The user wants a feasibility verdict (go / risky / no-go) before committing to build.
 - The user asks "is this feasible?", "can we build X?", "assess this before we start", "feasibility check", or "is this buildable?"
 - The user wants a quick blocker / dependency / risk scan of a goal.
-- An orchestrator (KAKIS) needs the feasibility phase as a subtask.
+- An orchestrator (Kakis) needs the feasibility phase as a subtask.
 
 Don't use for:
 - A full plan — use Dory (iterative plan-review) instead.
@@ -32,7 +32,7 @@ Don't use for:
 Like Dory, Igor is a procedural skill — no CLI. Two modes:
 
 - **Standalone:** the user asks for a feasibility assessment. The agent loads Igor and runs the workflow end-to-end, delivering a Telegram notification on completion.
-- **Orchestrated:** KAKIS (or another orchestrator) loads Igor mid-pipeline, passing its run workspace path. Igor writes `feasibility.md` into that workspace and does NOT send a standalone notification — the orchestrator sends its own gate.
+- **Orchestrated:** Kakis (or another orchestrator) loads Igor mid-pipeline, passing its run workspace path. Igor writes `feasibility.md` into that workspace and does NOT send a standalone notification — the orchestrator sends its own gate.
 
 ## Architecture
 
@@ -100,7 +100,7 @@ REPORT FORMAT (max 40 lines):
 
 STRICT RULES:
 - RESEARCH ONLY. Do NOT plan, do NOT write code, do NOT execute the goal.
-- Do NOT load or invoke the KAKIS (pipeline), Dory, or Bob skills.
+- Do NOT load or invoke the Kakis (pipeline), Dory, or Bob skills.
 - Do NOT modify any files other than writing feasibility.md.
 
 Goal: <original goal>
@@ -113,14 +113,14 @@ Confirm `<workspace>/feasibility.md` exists and contains a `=== FEASIBILITY:` li
 ### Step 3 — Deliver
 
 - **Standalone:** present the report to the user inline, then send a Telegram notification with the verdict, top risks, and the workspace path (by design — always send on standalone completion). Use `hermes send --to telegram -f <msgfile>` (reuses the gateway's TELEGRAM_BOT_TOKEN + TELEGRAM_HOME_CHANNEL from ~/.hermes/.env). Write the body to a scratch file first to avoid shell-quoting issues, and put the attachment in the body as its own line `MEDIA: <workspace>/feasibility.md` — the attachment rides in the message text, not a CLI flag. Check the exit code: 0 = delivered; nonzero = surface the error, do not claim success.
-- **Orchestrated:** return the verdict and report path to the orchestrator. Do NOT send a Telegram message — the orchestrator (KAKIS) sends its own gate.
+- **Orchestrated:** return the verdict and report path to the orchestrator. Do NOT send a Telegram message — the orchestrator (Kakis) sends its own gate.
 
 ## Common Pitfalls
 
 1. **Fabricated verdict.** If the researcher times out or returns no valid verdict, fall back to `RISKY` with the uncertainty noted — never invent a GO/NO-GO.
 2. **Researcher drifts into planning or overflows the line cap.** The STRICT RULES forbid planning/code/execution and the report must be ≤ 40 lines, but the researcher often appends an extra reference section (e.g. a "deployment shape" command block) that pushes it over. The orchestrator owns the cap: trim the report to the verdict + Rationale/Unknowns/Dependencies/Risks sections before delivery, or re-dispatch with a stronger "research only" instruction.
-3. **Recursion / re-entering the pipeline.** The researcher must not load KAKIS, Dory, or Bob. Without the guard, a delegated subagent can re-enter the full pipeline.
-4. **Double Telegram in orchestrated mode.** When KAKIS invokes Igor, Igor must NOT send its own notification — KAKIS sends the gate. A double message confuses the user. Gate the delivery on the mode (Step 3).
+3. **Recursion / re-entering the pipeline.** The researcher must not load Kakis, Dory, or Bob. Without the guard, a delegated subagent can re-enter the full pipeline.
+4. **Double Telegram in orchestrated mode.** When Kakis invokes Igor, Igor must NOT send its own notification — Kakis sends the gate. A double message confuses the user. Gate the delivery on the mode (Step 3).
 5. **Workspace collision.** Standalone uses `~/workspace/igor_<slug>_<timestamp>/`; orchestrated uses the orchestrator's run workspace. Never create a new workspace when an orchestrator already supplied one.
 6. **Local checks go beyond read-only.** The researcher may run read-only terminal checks to verify prerequisites (e.g., `which opencode`, `test -f ~/.hermes/.env`) but must not install, modify, or create anything except feasibility.md.
 
@@ -133,4 +133,4 @@ Confirm `<workspace>/feasibility.md` exists and contains a `=== FEASIBILITY:` li
 - [ ] Report has Rationale, Key Unknowns, Dependencies, Top Risks sections
 - [ ] Report is ≤ 40 lines
 - [ ] Standalone: Telegram notification sent and exit code 0; Orchestrated: no notification
-- [ ] Researcher did not load KAKIS/Dory/Bob and did not write code or modify files
+- [ ] Researcher did not load Kakis/Dory/Bob and did not write code or modify files

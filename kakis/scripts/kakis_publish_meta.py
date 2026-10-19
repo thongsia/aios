@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Publish the KAKIS memory schema + query cookbook into the kakis_meta index.
+"""Publish the Kakis memory schema + query cookbook into the kakis_meta index.
 
 Docs:
   schema/v1           full JSON schema (schema-v1.json content inline in `body`)
@@ -45,7 +45,7 @@ SCHEMA_VERSION = "v1"
 
 INDEX_MAP = {
     "aliases": {
-        "kakis_runs": "one doc per KAKIS run (index card: goal, phase, gate decisions, workspaces)",
+        "kakis_runs": "one doc per Kakis run (index card: goal, phase, gate decisions, workspaces)",
         "kakis_artifacts": "one doc per file artifact (run + dory/ + bob/ sub-workspaces; full text <= 512KiB)",
         "kakis_calls": "one doc per sub-module invocation (igor, dory iterations, bob harnesses, execution batches)",
         "kakis_meta": "this meta index: schema + query cookbook + index map",

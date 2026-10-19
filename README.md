@@ -12,14 +12,14 @@ the agent picks them up.
 
 | Skill | Version | What it does |
 |---|---|---|
-| [`KAKIS`](kakis/) | 0.6.0 | The orchestrator: Igor → Dory → Bob → Execute, with three Telegram decision gates. User supplies a goal, KAKIS does the rest. |
-| [`Igor`](igor/) | 1.0.2 | Feasibility research assistant: a single research subagent produces a GO / RISKY / NO-GO verdict. |
-| [`Dory`](dory/) | 1.1.3 | Iterative plan-review loop (subplanner ↔ subreviewer) until theoretical saturation. Outputs the final prompt and the final plan. |
+| [`Kakis`](kakis/) | 0.7.0 | The orchestrator: Igor → Dory → Bob → Execute, with three Telegram decision gates. User supplies a goal, Kakis does the rest. |
+| [`Igor`](igor/) | 1.0.3 | Feasibility research assistant: a single research subagent produces a GO / RISKY / NO-GO verdict. |
+| [`Dory`](dory/) | 1.1.4 | Iterative plan-review loop (subplanner ↔ subreviewer) until theoretical saturation. Outputs the final prompt and the final plan. |
 | [`Bob`](bob/) | 1.1.1 | Fan-out/fan-in: dispatch a prompt to multiple AI coding agents to produce individual plans, synthesize a best-of-breed plan. Not merge, but pick the best and augment with the rest. |
-| [`kakis_memory`](kakis_memory/) | 1.0.1 | Access protocol for the OpenSearch mirror — how any other agent discovers and queries pipeline history |
+| [`kakis_memory`](kakis_memory/) | 1.0.2 | Access protocol for the OpenSearch mirror — how any other agent discovers and queries pipeline history |
 | [`prompt-writing`](prompt-writing/) | 1.0.1 | Production-grade prompt patterns (Anthropic canonical style) |
 
-## The KAKIS pipeline
+## The Kakis pipeline
 
 ```
 goal ──▶ Igor (feasibility) ──▶ GATE 0 ──▶ Dory (plan iterate) ──▶ GATE 1 ──▶ Bob (synthesize) ──▶ GATE 2 ──▶ Execute (batches) ──▶ notify
@@ -70,7 +70,7 @@ disagrees, the meta doc wins.
 | Script | Purpose |
 |---|---|
 | `kakis_indices.py` | Create the four indices + aliases (idempotent) |
-| `kakis_export.py` | Mirror one run (`<run_workspace>`) or all runs (`--all`) into OpenSearch. Deterministic doc ids → re-runs are idempotent upserts. Best-effort: the KAKIS pipeline never aborts on export failure |
+| `kakis_export.py` | Mirror one run (`<run_workspace>`) or all runs (`--all`) into OpenSearch. Deterministic doc ids → re-runs are idempotent upserts. Best-effort: the Kakis pipeline never aborts on export failure |
 | `kakis_publish_meta.py` | (Re)publish schema + query cookbook + index map into `kakis_meta` |
 | `test_kakis_export.py` | Unit tests for the exporter's pure functions (`python3 -m pytest test_kakis_export.py`) |
 | `gate.py` / `gate_poller.py` | Gate messaging (records `gate_timestamp`) and the 1-hour auto-proceed poller |
@@ -88,7 +88,7 @@ A run on a machine that cannot reach the cluster — or has not configured it
 
 ### Sub-module call trace: `calls.jsonl`
 
-KAKIS appends one JSON record per delegation (Dory dispatch, Bob harness,
+Kakis appends one JSON record per delegation (Dory dispatch, Bob harness,
 execution batch) to `<run_workspace>/calls.jsonl` — open record on dispatch,
 closed record (status, timing, summary, outputs) on return. Legacy runs
 without `calls.jsonl` get their calls reconstructed from the on-disk
@@ -131,7 +131,7 @@ Self-Improvement Loop commits skill improvements back into this repo (see
 edits, and updates arrive via `git pull` (after a history rewrite:
 `git fetch && git reset --hard origin/master`).
 
-Prerequisites for a full KAKIS run: Telegram configured in `~/.hermes/.env`
+Prerequisites for a full Kakis run: Telegram configured in `~/.hermes/.env`
 (`TELEGRAM_BOT_TOKEN`, `TELEGRAM_HOME_CHANNEL`) and at least one working Bob
-harness. The OpenSearch mirror is optional — KAKIS runs fine without it.
+harness. The OpenSearch mirror is optional — Kakis runs fine without it.
 A `.env.example` at the repo root lists every setting the scripts read.

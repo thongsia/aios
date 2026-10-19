@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gate poller for KAKIS workflow — checks for pending gates and auto-proceeds after timeout.
+"""Gate poller for Kakis workflow — checks for pending gates and auto-proceeds after timeout.
 
 Runs as a cron job (no_agent=True) every 10 minutes.
 Auto-proceeds a gate if it has been waiting for GATE_TIMEOUT_SECONDS (default 3600).
@@ -131,7 +131,7 @@ def scan_all() -> int:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="KAKIS gate poller")
+    parser = argparse.ArgumentParser(description="Kakis gate poller")
     sub = parser.add_subparsers(dest="cmd")
 
     scan_p = sub.add_parser("scan", help="Scan all kakis runs for expiring gates")

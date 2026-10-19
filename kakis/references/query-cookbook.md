@@ -1,4 +1,4 @@
-# KAKIS memory query cookbook (v1)
+# Kakis memory query cookbook (v1)
 
 Endpoint: a private-network OpenSearch cluster (no auth). Read via aliases only.
 All queries below are copy-pasteable. Replace `...` with values from earlier results.

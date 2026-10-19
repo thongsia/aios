@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "kakis-memory schema v1",
-  "description": "Document schemas for the KAKIS pipeline memory in OpenSearch (indices kakis_runs, kakis_artifacts, kakis_calls, behind aliases of the same names). Written by kakis_export.py; read by any agent.",
+  "description": "Document schemas for the Kakis pipeline memory in OpenSearch (indices kakis_runs, kakis_artifacts, kakis_calls, behind aliases of the same names). Written by kakis_export.py; read by any agent.",
   "schema_version": "v1",
   "doc_id_conventions": {
     "kakis_runs": "id = run_id (workspace directory name, '<slug>_<YYYYMMDDHHMMSS>')",

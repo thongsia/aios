@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mirror a KAKIS run (workspace + Dory/Bob sub-workspaces) into OpenSearch.
+"""Mirror a Kakis run (workspace + Dory/Bob sub-workspaces) into OpenSearch.
 
 Usage:
   kakis_export.py <run_workspace>            export one run

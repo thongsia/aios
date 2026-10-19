@@ -1,7 +1,7 @@
 ---
 name: Dory
 description: "Use for iterative plan-review cycles until saturation."
-version: 1.1.3
+version: 1.1.4
 author: Hermes Agent
 license: MIT
 platforms: [linux, macos]
@@ -44,7 +44,7 @@ The subplanner always starts from scratch — it never sees previous plans. This
 
 ### Initialization
 
-1. Determine the task folder: if an orchestrator (e.g. KAKIS) supplied one, use it as-is. Otherwise derive a task folder name from the user's prompt: slugify the core subject by taking the first meaningful noun phrase (e.g. "build a REST API for user auth" → `rest-api-user-auth`, "redesign the landing page" → `landing-page-redesign`). Keep it short, lowercase, hyphen-separated, max 40 characters.
+1. Determine the task folder: if an orchestrator (e.g. Kakis) supplied one, use it as-is. Otherwise derive a task folder name from the user's prompt: slugify the core subject by taking the first meaningful noun phrase (e.g. "build a REST API for user auth" → `rest-api-user-auth`, "redesign the landing page" → `landing-page-redesign`). Keep it short, lowercase, hyphen-separated, max 40 characters.
 2. Create a working directory: `mkdir -p ~/workspace/<TASK_FOLDER>`
 3. Clear previous artifacts: remove all `plan_*.txt`, `prompt_*.txt`, `review_*.txt` from that directory
 4. Set `current_prompt` to the user's request
