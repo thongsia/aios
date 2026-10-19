@@ -14,7 +14,7 @@ the agent picks them up.
 |---|---|---|
 | [`kakis`](kakis/) | 0.4.0 | The orchestrator: Igor → Dory → Bob → Execute, with three Telegram decision gates. User supplies a goal, kakis does the rest. |
 | [`igor`](igor/) | 1.0.0 | Feasibility research assistant: a single research subagent produces a GO / RISKY / NO-GO verdict. TODO: Recall |
-| [`dory`](dory/) | 1.0.0 | Iterative plan-review loop (subplanner ↔ subreviewer) until theoretical saturation as a stop loop signal. Outputs specs as a prompt |
+| [`dory`](dory/) | 1.1.0 | Iterative plan-review loop (subplanner ↔ subreviewer) until theoretical saturation as a stop loop signal. Outputs specs as a prompt |
 | [`bob`](bob/) | 1.0.0 | Fan-out/fan-in: dispatch a prompt to multiple AI coding agents to produce individual plans, synthesize a best-of-breed plan. Not merge, but pick the best and augment with the rest. |
 | [`kakis_memory`](kakis_memory/) | 1.0.0 | Access protocol for the OpenSearch mirror — how any other agent discovers and queries pipeline history |
 | [`prompt-writing`](prompt-writing/) | 1.0.0 | Production-grade prompt patterns (Anthropic canonical style) |
@@ -119,6 +119,12 @@ folder):
 ```bash
 git clone https://github.com/thongsia/aios ~/.hermes/skills/aios
 ```
+
+The install is a live git working tree, not a snapshot: Dory's
+Self-Improvement Loop commits skill improvements back into this repo (see
+`dory/SKILL.md`, step S2), so the tree should never carry uncommitted skill
+edits, and updates arrive via `git pull` (after a history rewrite:
+`git fetch && git reset --hard origin/master`).
 
 Prerequisites for a full KAKIS run: Telegram configured in `~/.hermes/.env`
 (`TELEGRAM_BOT_TOKEN`, `TELEGRAM_HOME_CHANNEL`) and at least one working Bob

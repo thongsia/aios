@@ -1,7 +1,7 @@
 ---
 name: Dory
 description: "Use for iterative plan-review cycles until saturation."
-version: 1.0.0
+version: 1.1.0
 author: Hermes Agent
 license: MIT
 metadata:
@@ -245,6 +245,8 @@ Read `~/workspace/<TASK_FOLDER>/postmortem.txt`. Extract the `SKILL IMPROVEMENTS
 - **Subplanner guidance**: If the subplanner had a consistent blind spot, add a specific instruction in the subplanner context to address it.
 - **Saturation check tuning**: If the saturation check was too lenient or too aggressive, adjust the thresholds.
 - **Task decomposition hint**: If the task is inherently too complex for a single loop, add instructions to decompose it into sub-tasks.
+
+**Persist the improvement — never leave it as an uncommitted local edit.** The patch above modifies the installed skill file in place. If the install is a git working tree (`git -C <skill_dir> rev-parse --is-inside-work-tree`; true for the documented clone install), commit the change on the spot: `git -C <skill_dir> commit -am "dory: self-improvement after <TASK_FOLDER> — <one-line summary> (postmortem: <path>)"`, and push if a remote exists. An uncommitted patch is invisible to future clones, lost on the next reset, and can block or be silently discarded by the next pull; the commit plus the postmortem reference is the reviewable record of what the loop learned (revert it with `git revert` if the change proves harmful). For a non-git (copy) install, append the applied patch and a one-line postmortem summary to `<TASK_FOLDER>/skill_improvements_pending.md` so the owner can port it into the canonical repo.
 
 #### Step S3 — Restart From Scratch
 
