@@ -1,8 +1,10 @@
 ---
 name: prompt-writing
 description: "Write production-grade prompts using Anthropic's canonical prompt engineering patterns from Claude Code docs and platform best practices."
-version: 1.0.0
+version: 1.0.1
 author: Hermes Agent
+license: MIT
+platforms: [linux, macos]
 metadata:
   hermes:
     tags: [prompt-engineering, writing, claude, anthropic]

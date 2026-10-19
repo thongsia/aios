@@ -1,9 +1,10 @@
 ---
 name: Igor
 description: "Use for feasibility research: go/risky/no-go verdict."
-version: 1.0.1
+version: 1.0.2
 author: Hermes Agent
 license: MIT
+platforms: [linux, macos]
 metadata:
   hermes:
     tags: [research, feasibility, go-no-go, pre-planning, multi-agent]
