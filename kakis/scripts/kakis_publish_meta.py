@@ -46,7 +46,7 @@ SCHEMA_VERSION = "v1"
 INDEX_MAP = {
     "aliases": {
         "kakis_runs": "one doc per KAKIS run (index card: goal, phase, gate decisions, workspaces)",
-        "kakis_artifacts": "one doc per file artefact (run + dory/ + bob/ sub-workspaces; full text <= 512KiB)",
+        "kakis_artifacts": "one doc per file artifact (run + dory/ + bob/ sub-workspaces; full text <= 512KiB)",
         "kakis_calls": "one doc per sub-module invocation (igor, dory iterations, bob harnesses, execution batches)",
         "kakis_meta": "this meta index: schema + query cookbook + index map",
     },

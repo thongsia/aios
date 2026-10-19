@@ -8,7 +8,7 @@ No built-in default; exits 4 when unset.
 
 Creates (if absent):
   kakis_runs_v1      -> alias kakis_runs       (one doc per run)
-  kakis_artifacts_v1 -> alias kakis_artifacts  (one doc per file artefact)
+  kakis_artifacts_v1 -> alias kakis_artifacts  (one doc per file artifact)
   kakis_calls_v1     -> alias kakis_calls      (one doc per sub-module invocation)
   kakis_meta_v1      -> alias kakis_meta       (schema + query cookbook docs)
 """

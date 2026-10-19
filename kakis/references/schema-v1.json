@@ -16,7 +16,7 @@
     "call_status": ["ok", "failed", "timeout"]
   },
   "conventions": [
-    "content policy: text artefacts <= 512KiB carry full `content`; larger text carries only `head` (first 2KiB) + sha256; binary carries only metadata. `original_path` always points at the canonical local copy.",
+    "content policy: text artifacts <= 512KiB carry full `content`; larger text carries only `head` (first 2KiB) + sha256; binary carries only metadata. `original_path` always points at the canonical local copy.",
     "path prefix: run-workspace files use bare relative paths; Dory sub-workspace files use 'dory/...'; Bob sub-workspace files use 'bob/...' (per-harness `home/` sandboxes are never mirrored — per-harness raw output is inside bob_results.json raw_stdout).",
     "timestamps: ISO8601 with offset. Legacy naive timestamps (pre-2026-10-14 state files) are assumed +08:00 local wall clock.",
     "calls: seq is per-run monotonic. Reconstructed calls (legacy runs without calls.jsonl) carry 'reconstructed' in notes. Bob harness calls have variant=<harness name>.",

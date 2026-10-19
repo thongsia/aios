@@ -40,21 +40,21 @@ Fetch one run doc:
 curl -s '$OS/kakis_runs/_doc/<run_id>'
 ```
 
-## Artefacts
+## Artifacts
 
-All artefacts for one run:
+All artifacts for one run:
 ```bash
 curl -s '$OS/kakis_artifacts/_search' -H 'Content-Type: application/json' \
   -d '{"query":{"term":{"run_id":"<run_id>"}},"size":200,"sort":[{"path":"asc"}]}'
 ```
 
-Fetch one artefact's content (e.g. the final plan):
+Fetch one artifact's content (e.g. the final plan):
 ```bash
 curl -s '$OS/kakis_artifacts/_search' -H 'Content-Type: application/json' \
   -d '{"query":{"term":{"path":"final_plan.txt"}},"_source":["content","size_bytes","mtime"]}'
 ```
 
-Search inside artefact text across all runs (e.g. "what did we decide about visualViewport"):
+Search inside artifact text across all runs (e.g. "what did we decide about visualViewport"):
 ```bash
 curl -s '$OS/kakis_artifacts/_search' -H 'Content-Type: application/json' \
   -d '{"query":{"multi_match":{"query":"visualViewport","fields":["content","head"],"type":"best_fields"}},"size":10,"_source":["run_id","path","head"]}'

@@ -51,16 +51,16 @@ curl -s "$OS/kakis_meta/_search" -H 'Content-Type: application/json' \
 ## Document model (summary — live schema wins)
 
 - `kakis_runs` — one doc per run; id = `run_id`. Fields: goal, phase, status, feasibility_verdict, gates (decision/scope note per gate), dory_iterations, bob_best_harness/score, completed_steps, workspace paths, artifact/call counts.
-- `kakis_artifacts` — one doc per file artefact; id = sha256(run_id|path). Paths: bare = run workspace, `dory/...` = Dory sub-workspace, `bob/...` = Bob sub-workspace. Text files ≤ 512KiB carry full `content`; larger/binary carry `head` (2KiB) + `sha256` + `original_path` (canonical local copy).
+- `kakis_artifacts` — one doc per file artifact; id = sha256(run_id|path). Paths: bare = run workspace, `dory/...` = Dory sub-workspace, `bob/...` = Bob sub-workspace. Text files ≤ 512KiB carry full `content`; larger/binary carry `head` (2KiB) + `sha256` + `original_path` (canonical local copy).
 - `kakis_calls` — one doc per sub-module invocation; id = run_id|call|seq|module. Modules: igor, dory_planner, dory_reviewer, bob_harness (variant = harness name), bob_synth, execution_batch, compress. Sorted by `seq` = the run's full call trace.
 
 ## Retrieval patterns
 
 1. **Find a run** — full-text over goal: `kakis_runs/_search` with `match` on `goal`; or list recent: sort `updated_at` desc.
-2. **List its artefacts** — `kakis_artifacts/_search` with `term run_id`, sort by path; request `_source: [path, kind, size_bytes, mtime, head]` for cheap previews.
+2. **List its artifacts** — `kakis_artifacts/_search` with `term run_id`, sort by path; request `_source: [path, kind, size_bytes, mtime, head]` for cheap previews.
 3. **Fetch content** — add `content` to `_source` for the specific path (final plans live at `final_plan.txt`; feasibility at `feasibility.md` — see the schema doc for the full kind enum).
 4. **Call trace** — `kakis_calls/_search` with `term run_id`, sort `seq` asc. This shows every subplanner/reviewer iteration, every Bob harness outcome, and every execution batch — including failures (`status: failed|timeout`).
-5. **Cross-run memory** ("what do we know about topic X") — search `kakis_runs.goal`, then pull artefacts for the matching run(s); for deep text search use `multi_match` over `kakis_artifacts.content`/`head`.
+5. **Cross-run memory** ("what do we know about topic X") — search `kakis_runs.goal`, then pull artifacts for the matching run(s); for deep text search use `multi_match` over `kakis_artifacts.content`/`head`.
 
 Full copy-pasteable recipes: `kakis_meta` doc `query-cookbook` (or `~/.hermes/skills/aios/kakis/references/query-cookbook.md` locally).
 

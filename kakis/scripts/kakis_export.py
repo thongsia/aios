@@ -164,7 +164,7 @@ def doc_id_call(run_id, seq, module):
 # ---------------------------------------------------------------- classification
 
 def classify(rel_path, state_phase="unknown"):
-    """Return (kind, phase, module) for an artefact path (relative, may be dory/... or bob/...)."""
+    """Return (kind, phase, module) for an artifact path (relative, may be dory/... or bob/...)."""
     name = Path(rel_path).name
     dory_n = re.match(r"^(prompt|plan|review)_(\d+)\.txt$", name)
     if rel_path.startswith("dory/"):
