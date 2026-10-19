@@ -1,13 +1,13 @@
 ---
 name: Dory
 description: "Use for iterative plan-review cycles until saturation."
-version: 1.1.0
+version: 1.1.1
 author: Hermes Agent
 license: MIT
 metadata:
   hermes:
     tags: [planning, multi-agent, delegation, iterative-refinement, planner-loop]
-    related_skills: [plan, write-prompt]
+    related_skills: [plan, prompt-writing]
 ---
 
 # Forgetful Planner
@@ -137,7 +137,7 @@ CORE RULES:
 
 8. Maximum 5 new specifications per iteration. If you find more than 5 gaps, prioritize the most critical ones and drop the rest.
 
-9. Apply prompt-writing patterns from the write-prompt skill. When writing the improved prompt, follow these principles: describe the outcome, not the steps; give the agent a way to verify its own work (tests, build, comparison); point at references when possible (existing patterns, examples); state measurable targets for performance/coverage goals; say how the answer should be delivered (format, audience). The improved prompt should follow the anatomy: Goal + Reference + Constraint + Verification + Output format.
+9. Apply the patterns from the `prompt-writing` skill. When writing the improved prompt, follow these principles: describe the outcome, not the steps; give the agent a way to verify its own work (tests, build, comparison); point at references when possible (existing patterns, examples); state measurable targets for performance/coverage goals; say how the answer should be delivered (format, audience). The improved prompt should follow the anatomy: Goal + Reference + Constraint + Verification + Output format.
 
 OUTPUT FORMAT for prompt file:
 === IMPROVED PROMPT (Iteration N) ===
@@ -273,10 +273,10 @@ Restarting the task from scratch with the improved skill...
 
 When saturation is reached:
 
-1. Load the `write-prompt` skill to review the final prompt quality
+1. Load the `prompt-writing` skill to review the final prompt quality
 2. Read the final plan from `~/workspace/<TASK_FOLDER>/plan_N.txt`
 3. Read the final prompt from the last `prompt_N.txt`
-4. Apply write-prompt principles: verify the prompt describes outcomes not steps, includes verification criteria, references existing patterns, states measurable targets, and specifies output format
+4. Apply the prompt-writing principles: verify the prompt describes outcomes not steps, includes verification criteria, references existing patterns, states measurable targets, and specifies output format
 5. Present to the user:
 
 ```
