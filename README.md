@@ -12,7 +12,7 @@ the agent picks them up.
 
 | Skill | Version | What it does |
 |---|---|---|
-| [`kakis`](kakis/) | 0.4.0 | The orchestrator: Igor → Dory → Bob → Execute, with three Telegram decision gates. User supplies a goal, kakis does the rest. |
+| [`kakis`](kakis/) | 0.5.0 | The orchestrator: Igor → Dory → Bob → Execute, with three Telegram decision gates. User supplies a goal, kakis does the rest. |
 | [`igor`](igor/) | 1.0.0 | Feasibility research assistant: a single research subagent produces a GO / RISKY / NO-GO verdict. TODO: Recall |
 | [`dory`](dory/) | 1.1.0 | Iterative plan-review loop (subplanner ↔ subreviewer) until theoretical saturation as a stop loop signal. Outputs specs as a prompt |
 | [`bob`](bob/) | 1.0.0 | Fan-out/fan-in: dispatch a prompt to multiple AI coding agents to produce individual plans, synthesize a best-of-breed plan. Not merge, but pick the best and augment with the rest. |
@@ -105,7 +105,7 @@ aios/
 ├── igor/                 feasibility research
 ├── kakis/                orchestrator
 │   ├── SKILL.md
-│   ├── references/       schema-v1.json, query-cookbook.md (published into kakis_meta)
+│   ├── references/       schema-v1.json, query-cookbook.md (published into kakis_meta), data-analysis-runs.md
 │   └── scripts/          gate, poller, index setup, exporter, meta publisher, tests
 ├── kakis_memory/         OpenSearch access protocol for other agents
 └── prompt-writing/       prompt engineering patterns
