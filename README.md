@@ -12,8 +12,8 @@ the agent picks them up.
 
 | Skill | Version | What it does |
 |---|---|---|
-| [`kakis`](kakis/) | 0.4.0 | The orchestrator: Research → Dory → Bob → Execute, with three Telegram decision gates |
-| [`igor`](igor/) | 1.0.0 | Feasibility research: a single research subagent produces a GO / RISKY / NO-GO verdict |
+| [`kakis`](kakis/) | 0.4.0 | The orchestrator: Igor → Dory → Bob → Execute, with three Telegram decision gates |
+| [`igor`](igor/) | 1.0.0 | Feasibility research assistant: a single research subagent produces a GO / RISKY / NO-GO verdict |
 | [`dory`](dory/) | 1.0.0 | Iterative plan-review loop (subplanner ↔ subreviewer) until saturation. Outputs specs as a prompt |
 | [`bob`](bob/) | 1.0.0 | Fan-out/fan-in: dispatch a prompt to multiple AI coding agents, synthesize the best-of-breed plan |
 | [`kakis_memory`](kakis_memory/) | 1.0.0 | Access protocol for the OpenSearch mirror — how any other agent discovers and queries pipeline history |
