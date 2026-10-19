@@ -1,4 +1,4 @@
-# aios — AI Orchestration Skills for Hermes Agent
+# aios — AI Orchestration Skillset for human-in-the-loop agentic workflows
 
 A skillset for Hermes Agent that chains AI agents into a structured,
 human-in-the-loop planning-and-execution pipeline, with every run mirrored
