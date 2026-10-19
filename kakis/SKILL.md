@@ -157,7 +157,7 @@ delivers the user's reply back to the agent's session — no polling or cron nee
 
 ### Phase 2 — Bob Synthesis
 
-1. Invoke Bob's dispatch CLI with Dory's refined prompt. Run it as a tracked background process with output logged to the run workspace, and pass an explicit `--timeout` at or above Bob's per-harness default for long or complex prompts (Bob's default is 1800s as of this writing — check the bob skill for the live value; values below it let every harness time out on a complex prompt, leaving Bob with no usable output):
+1. Invoke Bob's dispatch CLI with Dory's refined prompt. Run it as a tracked background process with output logged to the run workspace, and pass an explicit `--timeout` at or above Bob's per-harness default (1800s, documented in the bob skill) for long or complex prompts — values below it let every harness time out on a complex prompt, leaving Bob with no usable output:
    ```
    terminal(command='cd <run_workspace> && python3 ~/.hermes/skills/aios/bob/scripts/bob_dispatch.py --prompt "$(cat final_prompt.txt)" --timeout 1800 > bob_dispatch.log 2>&1', background=true, notify=true)
    ```

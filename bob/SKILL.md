@@ -1,7 +1,7 @@
 ---
 name: bob
 description: "Fan-out/fan-in planning: dispatch a prompt to multiple AI coding agents, collect and synthesize a best-of-breed implementation plan."
-version: 1.0.0
+version: 1.0.1
 author: Hermes Agent
 ---
 
@@ -34,7 +34,7 @@ python3 ~/.hermes/skills/aios/bob/scripts/bob_dispatch.py --prompt "Build a REST
 # Run specific harnesses only
 python3 ~/.hermes/skills/aios/bob/scripts/bob_dispatch.py --prompt "..." --harnesses opencode,hermes
 
-# Custom timeout (default 600s)
+# Custom timeout (default 1800s)
 python3 ~/.hermes/skills/aios/bob/scripts/bob_dispatch.py --prompt "..." --timeout 300
 
 # Clean up previous workspace
@@ -45,11 +45,15 @@ This environment installs the skill under the `aios/` category (`~/.hermes/skill
 
 ## Configuration
 
-| Key | Default | Description |
-|-----|---------|-------------|
-| `bob.keep_workspace` | `false` | If true, keep workspace after run (default: clean on next invocation) |
-| `bob.timeout` | `600` | Per-harness timeout in seconds |
-| `bob.harnesses` | `opencode,hermes,qwen,dsh` | Comma-separated list of harnesses to use |
+`bob_dispatch.py` takes CLI flags only — there is no config-file loading:
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--prompt` / `-p` | — | User prompt to dispatch (required for a run) |
+| `--timeout` | `1800` | Per-harness timeout in seconds |
+| `--harnesses` | all available | Comma-separated list of harnesses to use (e.g. `opencode,hermes`) |
+| `--min-success` | `1` | Minimum harnesses that must succeed |
+| `--cleanup` | — | Remove the previous workspace and exit |
 
 ## Architecture
 
