@@ -1,8 +1,8 @@
 # AIOS — AI Orchestration Skillset for human-in-the-loop agentic workflows
 
-_Disclaimer: This is very much a work-in-progress. It captures my research interest in an eco-sysñtem of skillful agents, where skills can be learned, honed, and recalled. The orchestration skillset is the beginning. The eventual goal is an AI Operating System -- the real AIOS._
+_Disclaimer: This is very much a work-in-progress. It captures my research interest in an ecosystem of skillful agents, where skills can be learned, honed, and recalled. The orchestration skillset is the beginning. The eventual goal is an AI Operating System -- the real AIOS._
 
-AIOS is a skillset developed on Hermes Agent harness that chains AI agents into a semi-autonomous, human-in-the-loop planning-and-execution pipeline. Its aim is to turn a human curiosity or goal into results, in a high quality way. Every run is mirrored into OpenSearch as searchable long-term memory. 
+AIOS is a skillset developed on Hermes Agent harness that chains AI agents into a semi-autonomous, human-in-the-loop planning-and-execution pipeline. Its aim is to turn a human curiosity or goal into results, in a high quality way. Every run can be mirrored into OpenSearch as searchable long-term memory (best-effort — see the OpenSearch section).
 
 Each skill is a `SKILL.md` (procedural memory loaded on demand by the agent)
 plus optional scripts. No build step — clone into your skills directory and
@@ -13,17 +13,19 @@ the agent picks them up.
 | Skill | Version | What it does |
 |---|---|---|
 | [`KAKIS`](kakis/) | 0.6.0 | The orchestrator: Igor → Dory → Bob → Execute, with three Telegram decision gates. User supplies a goal, KAKIS does the rest. |
-| [`Igor`](igor/) | 1.0.1 | Feasibility research assistant: a single research subagent produces a GO / RISKY / NO-GO verdict. TODO: Recall |
-| [`Dory`](dory/) | 1.1.2 | Iterative plan-review loop (subplanner ↔ subreviewer) until theoretical saturation as a stop loop signal. Outputs specs as a prompt |
-| [`Bob`](bob/) | 1.1.0 | Fan-out/fan-in: dispatch a prompt to multiple AI coding agents to produce individual plans, synthesize a best-of-breed plan. Not merge, but pick the best and augment with the rest. |
-| [`kakis_memory`](kakis_memory/) | 1.0.0 | Access protocol for the OpenSearch mirror — how any other agent discovers and queries pipeline history |
-| [`prompt-writing`](prompt-writing/) | 1.0.0 | Production-grade prompt patterns (Anthropic canonical style) |
+| [`Igor`](igor/) | 1.0.2 | Feasibility research assistant: a single research subagent produces a GO / RISKY / NO-GO verdict. |
+| [`Dory`](dory/) | 1.1.3 | Iterative plan-review loop (subplanner ↔ subreviewer) until theoretical saturation. Outputs the final prompt and the final plan. |
+| [`Bob`](bob/) | 1.1.1 | Fan-out/fan-in: dispatch a prompt to multiple AI coding agents to produce individual plans, synthesize a best-of-breed plan. Not merge, but pick the best and augment with the rest. |
+| [`kakis_memory`](kakis_memory/) | 1.0.1 | Access protocol for the OpenSearch mirror — how any other agent discovers and queries pipeline history |
+| [`prompt-writing`](prompt-writing/) | 1.0.1 | Production-grade prompt patterns (Anthropic canonical style) |
 
 ## The KAKIS pipeline
 
 ```
 goal ──▶ Igor (feasibility) ──▶ GATE 0 ──▶ Dory (plan iterate) ──▶ GATE 1 ──▶ Bob (synthesize) ──▶ GATE 2 ──▶ Execute (batches) ──▶ notify
-                (no timeout)        (user proceeds/aborts via Telegram)        (auto-proceed after 1h)      (auto-proceed after 1h)
+                                (no timeout — explicit             (proceed/abort via              (proceed/abort via
+                                decision required)                 Telegram, else auto-            Telegram, else auto-
+                                                                   proceed after 1h)               proceed after 1h)
 ```
 
 - **Gates** are real decision points: the agent sends a Telegram message and
@@ -41,9 +43,10 @@ the root with `KAKIS_RUNS_ROOT`).
 
 ## OpenSearch memory mirror
 
-Every run — artifacts **and sub-module call traces** — is mirrored into
-OpenSearch so other agents (any profile, any machine) can use pipeline
-history as long-term memory.
+Every run can be mirrored — artifacts **and sub-module call traces** —
+into OpenSearch (best-effort, skipped when `AIOS_OPENSEARCH` is unset or
+the cluster is unreachable) so other agents (any profile, any machine)
+can use pipeline history as long-term memory.
 
 ### Indices (read via aliases; versioned indices evolve under them)
 
@@ -68,7 +71,7 @@ disagrees, the meta doc wins.
 |---|---|
 | `kakis_indices.py` | Create the four indices + aliases (idempotent) |
 | `kakis_export.py` | Mirror one run (`<run_workspace>`) or all runs (`--all`) into OpenSearch. Deterministic doc ids → re-runs are idempotent upserts. Best-effort: the KAKIS pipeline never aborts on export failure |
-| `kakis_publish_meta.py` | (Re)publish schema + query cookbook into `kakis_meta` |
+| `kakis_publish_meta.py` | (Re)publish schema + query cookbook + index map into `kakis_meta` |
 | `test_kakis_export.py` | Unit tests for the exporter's pure functions (`python3 -m pytest test_kakis_export.py`) |
 | `gate.py` / `gate_poller.py` | Gate messaging (records `gate_timestamp`) and the 1-hour auto-proceed poller |
 
@@ -89,7 +92,7 @@ KAKIS appends one JSON record per delegation (Dory dispatch, Bob harness,
 execution batch) to `<run_workspace>/calls.jsonl` — open record on dispatch,
 closed record (status, timing, summary, outputs) on return. Legacy runs
 without `calls.jsonl` get their calls reconstructed from the on-disk
-artefacts (flagged `reconstructed` in `notes`).
+artifacts (flagged `reconstructed` in `notes`).
 
 ### Write policy
 
@@ -100,7 +103,9 @@ read-only (there is no auth on the cluster; the convention is the guardrail).
 
 ```
 aios/
-├── bob/                  fan-out/fan-in synthesis (scripts/bob_dispatch.py)
+├── bob/                  fan-out/fan-in synthesis
+│   ├── references/       harness_specs.md (per-harness CLI documentation)
+│   └── scripts/          bob_dispatch.py, adapters/, normalizer, scorer, synthesizer
 ├── dory/                 iterative plan-review loop
 ├── igor/                 feasibility research
 ├── kakis/                orchestrator
