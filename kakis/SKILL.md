@@ -33,7 +33,7 @@ Don't use for:
 - Bob skill installed at `~/.hermes/skills/aios/bob/` with at least one working harness (`skill_view(name='bob')`).
 - Telegram configured in `~/.hermes/.env` (`TELEGRAM_BOT_TOKEN`, `TELEGRAM_HOME_CHANNEL`).
 - `hermes send --to telegram` delivers messages (exit code 0).
-- OpenSearch memory mirror (best-effort, never a prerequisite): `http://<your-opensearch>:9200`  reachable so `kakis_export.py` can mirror run artefacts for other agents. The pipeline must never depend on it — see Memory export.
+- OpenSearch memory mirror (best-effort, never a prerequisite): the cluster (base URL from `AIOS_OPENSEARCH` in the process env or `~/.hermes/.env` — no built-in default; if unset, the export no-ops) reachable so `kakis_export.py` can mirror run artefacts for other agents. The pipeline must never depend on it — see Memory export.
 
 ## Memory export (best-effort — never blocks the pipeline)
 
@@ -48,7 +48,7 @@ A copy of every run artefact, plus the sub-module call trace, is mirrored into O
    ```
    python3 ~/.hermes/skills/aios/kakis/scripts/kakis_export.py <run_workspace>
    ```
-   Non-zero exit → append the error to `notification.log` and continue. The pipeline NEVER aborts on export failure (local files stay canonical; re-export is idempotent). The cluster defaults to `http://<your-opensearch>:9200` ; override with the `AIOS_OPENSEARCH` env var or the `--opensearch` flag. On a machine that cannot reach the cluster the export simply no-ops — runs there work normally but are not mirrored unless they can reach it.
+   Non-zero exit → append the error to `notification.log` and continue. The pipeline NEVER aborts on export failure (local files stay canonical; re-export is idempotent). The cluster base URL comes from `AIOS_OPENSEARCH` (process env or `~/.hermes/.env`) or the `--opensearch` flag; with neither set, the script exits 4 with a clear not-configured message and the run is simply not mirrored. On a machine that cannot reach the cluster the export simply no-ops — runs there work normally but are not mirrored unless they can reach it.
 
 ## Procedure
 

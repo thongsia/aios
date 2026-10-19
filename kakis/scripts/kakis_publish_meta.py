@@ -7,6 +7,9 @@ Docs:
   index-map/v1        alias -> purpose -> doc-id conventions
 
 Idempotent (fixed ids). Usage: kakis_publish_meta.py [--opensearch URL]
+
+Base URL: --opensearch, else AIOS_OPENSEARCH (process env or ~/.hermes/.env).
+No built-in default; exits 4 when unset.
 """
 import json
 import os
@@ -17,7 +20,26 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
-DEFAULT_OS = os.environ.get("AIOS_OPENSEARCH", "http://<your-opensearch>:9200")
+def opensearch_base() -> str | None:
+    """OpenSearch base URL: AIOS_OPENSEARCH from the process env or ~/.hermes/.env, else None (not configured)."""
+    v = os.environ.get("AIOS_OPENSEARCH")
+    if v:
+        return v
+    env_file = os.path.expanduser("~/.hermes/.env")
+    if os.path.exists(env_file):
+        with open(env_file) as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#"):
+                    k, _, val = line.partition("=")
+                    if val.startswith('"') and val.endswith('"'):
+                        val = val[1:-1]
+                    if k == "AIOS_OPENSEARCH" and val.strip():
+                        return val.strip()
+    return None
+
+
+DEFAULT_OS = opensearch_base()
 REFS = Path(__file__).resolve().parent.parent / "references"
 SCHEMA_VERSION = "v1"
 
@@ -60,6 +82,9 @@ def main():
     base = DEFAULT_OS
     if "--opensearch" in sys.argv:
         base = sys.argv[sys.argv.index("--opensearch") + 1]
+    if base is None:
+        print("ERROR: OpenSearch not configured. Set AIOS_OPENSEARCH (process env or ~/.hermes/.env) or pass --opensearch.", file=sys.stderr)
+        return 4
     status, body = req(base, "GET", "/")
     if status != 200:
         print(f"ERROR: OpenSearch unreachable at {base} (HTTP {status})", file=sys.stderr)

@@ -26,7 +26,7 @@ KAKIS pipeline runs are mirrored into a private-network OpenSearch cluster so an
 
 ## Endpoint
 
-- `http://<your-opensearch>:9200` (no auth — trusted network).
+- Base URL: a private-network address (no auth — trusted network). Resolve it from `AIOS_OPENSEARCH` (process env, or set in `~/.hermes/.env` — the kakis scripts read the same setting and exit with a clear not-configured message when it is unset, so mirroring is skipped rather than erroring the run). In the examples below: `OS="${AIOS_OPENSEARCH:-http://<your-opensearch>:9200}"`.
 - Read via ALIASES only: `kakis_runs`, `kakis_artifacts`, `kakis_calls`, `kakis_meta`. Never versioned index names (`*_v1`) — they change with schema versions.
 - **Write policy: READ-ONLY for all agents.** The only writer is `kakis_export.py` (the KAKIS pipeline). There is no auth, so this convention is the only guardrail — do not index, delete, or update docs in these indices.
 
@@ -35,12 +35,14 @@ KAKIS pipeline runs are mirrored into a private-network OpenSearch cluster so an
 Before running ad-hoc queries, discover the live schema — it is self-described inside OpenSearch:
 
 ```bash
+OS="${AIOS_OPENSEARCH:-http://<your-opensearch>:9200}"   # or set AIOS_OPENSEARCH in ~/.hermes/.env
+
 # 1. Fetch the authoritative schema (embedded JSON schemas for all doc shapes, enums, doc-id conventions, content policy)
-curl -s 'http://<your-opensearch>:9200/kakis_meta/_search' -H 'Content-Type: application/json' \
+curl -s "$OS/kakis_meta/_search" -H 'Content-Type: application/json' \
   -d '{"query":{"term":{"name":"schema"}},"_source":["schema_version","body"]}'
 
 # 2. Fetch the query cookbook (copy-pasteable recipes)
-curl -s 'http://<your-opensearch>:9200/kakis_meta/_search' -H 'Content-Type: application/json' \
+curl -s "$OS/kakis_meta/_search" -H 'Content-Type: application/json' \
   -d '{"query":{"term":{"name":"query-cookbook"}},"_source":["body"]}'
 ```
 

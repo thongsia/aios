@@ -6,8 +6,12 @@ Usage:
   kakis_export.py --all                      export every run under ~/.hermes/kakis-runs/
   [--opensearch http://host:9200]
 
+The cluster base URL comes from --opensearch, else AIOS_OPENSEARCH (process env or
+~/.hermes/.env). There is no built-in default: if unset, the script exits 4 and the
+run is simply not mirrored (local files stay canonical).
+
 Idempotent: deterministic doc ids, safe to re-run (upserts).
-Exit codes: 0 ok, 2 opensearch unreachable, 3 bulk indexing errors.
+Exit codes: 0 ok, 2 opensearch unreachable, 3 bulk indexing errors, 4 not configured.
 
 Local files remain canonical; OpenSearch is a searchable copy.
 """
@@ -24,7 +28,26 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
-DEFAULT_OS = os.environ.get("AIOS_OPENSEARCH", "http://<your-opensearch>:9200")
+def opensearch_base() -> str | None:
+    """OpenSearch base URL: AIOS_OPENSEARCH from the process env or ~/.hermes/.env, else None (not configured)."""
+    v = os.environ.get("AIOS_OPENSEARCH")
+    if v:
+        return v
+    env_file = os.path.expanduser("~/.hermes/.env")
+    if os.path.exists(env_file):
+        with open(env_file) as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#"):
+                    k, _, val = line.partition("=")
+                    if val.startswith('"') and val.endswith('"'):
+                        val = val[1:-1]
+                    if k == "AIOS_OPENSEARCH" and val.strip():
+                        return val.strip()
+    return None
+
+
+DEFAULT_OS = opensearch_base()
 KAKIS_RUNS_ROOT = Path(os.environ.get("KAKIS_RUNS_ROOT", str(Path.home() / ".hermes" / "kakis-runs")))
 CONTENT_LIMIT = 512 * 1024  # full text only under this
 HEAD_LIMIT = 2 * 1024
@@ -603,6 +626,9 @@ def main(argv):
     base = DEFAULT_OS
     if "--opensearch" in argv:
         base = argv[argv.index("--opensearch") + 1]
+    if base is None:
+        print("ERROR: OpenSearch not configured. Set AIOS_OPENSEARCH (process env or ~/.hermes/.env) or pass --opensearch.", file=sys.stderr)
+        return 4
     status, body = req(base, "GET", "/")
     if status != 200:
         print(f"ERROR: OpenSearch unreachable at {base} (HTTP {status})", file=sys.stderr)

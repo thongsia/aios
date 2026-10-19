@@ -76,11 +76,12 @@ disagrees, the meta doc wins.
 
 | Setting | Default |
 |---|---|
-| `AIOS_OPENSEARCH` (env) or `--opensearch` (flag) | `http://<your-opensearch>:9200`  |
+| `AIOS_OPENSEARCH` (process env, or `AIOS_OPENSEARCH=...` in `~/.hermes/.env`) or `--opensearch` (flag) | No default. Set `AIOS_OPENSEARCH=http://<your-opensearch>:9200` in `~/.hermes/.env` (see `.env.example` at the repo root). If unset, the scripts exit with a clear not-configured message and mirroring is skipped — runs continue normally |
 | `KAKIS_RUNS_ROOT` (env) | `~/.hermes/kakis-runs` |
 
-A run on a machine that cannot reach the cluster simply skips mirroring
-(error logged to the run's `notification.log`) — the pipeline is unaffected.
+A run on a machine that cannot reach the cluster — or has not configured it
+(`AIOS_OPENSEARCH` unset) — simply skips mirroring (reason logged to the run's
+`notification.log`) — the pipeline is unaffected.
 
 ### Sub-module call trace: `calls.jsonl`
 
@@ -122,3 +123,4 @@ git clone https://github.com/thongsia/aios ~/.hermes/skills/aios
 Prerequisites for a full KAKIS run: Telegram configured in `~/.hermes/.env`
 (`TELEGRAM_BOT_TOKEN`, `TELEGRAM_HOME_CHANNEL`) and at least one working Bob
 harness. The OpenSearch mirror is optional — KAKIS runs fine without it.
+A `.env.example` at the repo root lists every setting the scripts read.
