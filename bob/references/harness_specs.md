@@ -41,7 +41,7 @@ Per-harness CLI flags, binary names, verified commands, and quirks.
 | **Version** | 0.22.0 |
 | **One-shot command** | `qwen --bare -p "PROMPT" --output-format text` |
 | **Key flags** | `--bare` (skip hooks/extensions), `--output-format text` (machine-parseable), `--approval-mode plan` (analysis-only) |
-| **Auth** | `OPENAI_API_KEY` + `OPENAI_BASE_URL` env vars (points to local llama.cpp: `http://llama.local:11435/v1`) |
+| **Auth** | `OPENAI_API_KEY` + `OPENAI_BASE_URL` env vars, sourced from `AIOS_QWEN_BASE_URL` / `AIOS_QWEN_MODEL` (process env or `~/.hermes/.env`; per-machine, no default in the repo — if unset, qwen uses its own config) |
 | **Config dir** | `~/.config/qwen/` |
 | **PTY needed** | No for headless `-p` mode |
 | **Status** | INSTALLED — available |

@@ -1,7 +1,7 @@
 ---
 name: Bob
 description: "Fan-out/fan-in planning: dispatch a prompt to multiple AI coding agents, collect and synthesize a best-of-breed implementation plan."
-version: 1.1.1
+version: 1.1.2
 author: Hermes Agent
 license: MIT
 platforms: [linux, macos]

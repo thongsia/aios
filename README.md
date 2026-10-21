@@ -15,7 +15,7 @@ the agent picks them up.
 | [`Kakis`](kakis/) | 0.7.0 | The orchestrator: Igor → Dory → Bob → Execute, with three Telegram decision gates. User supplies a goal, Kakis does the rest. |
 | [`Igor`](igor/) | 1.0.3 | Feasibility research assistant: a single research subagent produces a GO / RISKY / NO-GO verdict. |
 | [`Dory`](dory/) | 1.1.4 | Iterative plan-review loop (subplanner ↔ subreviewer) until theoretical saturation. Outputs the final prompt and the final plan. |
-| [`Bob`](bob/) | 1.1.1 | Fan-out/fan-in: dispatch a prompt to multiple AI coding agents to produce individual plans, synthesize a best-of-breed plan. Not merge, but pick the best and augment with the rest. |
+| [`Bob`](bob/) | 1.1.2 | Fan-out/fan-in: dispatch a prompt to multiple AI coding agents to produce individual plans, synthesize a best-of-breed plan. Not merge, but pick the best and augment with the rest. |
 | [`kakis_memory`](kakis_memory/) | 1.0.2 | Access protocol for the OpenSearch mirror — how any other agent discovers and queries pipeline history |
 | [`prompt-writing`](prompt-writing/) | 1.0.1 | Production-grade prompt patterns (Anthropic canonical style) |
 | [`aios-repo-maintenance`](aios-repo-maintenance/) | 0.1.0 | Maintains the skillset itself: apply fixes and keep the repo, live install, and published kakis_meta docs in sync. |
