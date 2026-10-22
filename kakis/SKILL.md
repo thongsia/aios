@@ -1,7 +1,7 @@
 ---
 name: Kakis
 description: "Research→Dory→Bob→execute orchestration with Telegram gates."
-version: 0.7.0
+version: 0.7.1
 author: Hermes Agent
 license: MIT
 platforms: [linux, macos]
@@ -235,6 +235,7 @@ When Telegram is unavailable, fall back to writing the notification to `notifica
 
 ## Pitfalls
 
+- **Never start a Kakis run from the webui (gateway-hosted api_server session)** — for api_server sessions the hermes-agent NEVER wakes the session on an async delegation completion (upstream design, #85957, `persist_delegation_delivery` in gateway/wake.py): the result is persisted only as a transcript delivery row (log: "persisting delivery row for api_server session … (no wake turn)") and folded into the next HUMAN-initiated turn — self-posting is forbidden because it could start an unauthorized turn across a pending human-confirmation gate. The webui's self-wake path (`_start_async_delegation_wakeup_turn`) only covers webui-LOCAL sessions (session_key `webui:<id>`), not gateway-hosted ones (`agent:main:api_server:dm:<id>`). Net effect: every background dispatch (Igor, Dory planner/reviewer, Bob, execution) ends the orchestrator turn and the pipeline stalls until the user types something. 2026-10-22 incident: coe-category-feebate-study run hung at the Dory iteration-1 reviewer; all earlier successful runs were on CLI (2026-10-06/11/12) or Telegram (2026-10-14), both of which auto-wake on completion. Run Kakis from a push platform (Telegram, CLI/TUI, cron); if it must run in a webui session, do NOT end the turn after a dispatch — block in-turn on the subagent (poll ~/.hermes/cache/delegation/live/<deleg_id>/task-0.log for the "final" line) before proceeding. Same day, a second failure mode in the same delivery family: a delegation result was terminally dropped after 8 persist refusals ("Session has an active turn lease; refusing transcript mutation") — check ~/.hermes/logs/errors.log for "terminally dropped" after any dispatch.
 - **Gate 0 never auto-proceeds** — do NOT schedule a `gate_poller.py` cron job for `gate0`. Unlike Gates 1/2 it waits indefinitely; an unanswered Gate 0 leaves the run sitting in `gate0` until the user replies (Phase 0 resume handles it).
 - **Gate message shell quoting:** Multi-line gate messages contain quotes and `/kakis` command text; hand-typed as a single-quoted shell variable, the embedded quotes make bash re-parse the string — the message gets truncated and a bogus command can be spawned, and `gate.py` then reports `bypass` (nothing delivered). Always write the message to a file in the run workspace and pass it via `--message "$(cat file)"`; verify the script prints `sent` before setting `gate_waiting`. Prefer the plain CLI invocation (`python3 .../gate.py gate --message "$(cat file)" --workspace ...`) over an ad-hoc `python3 -c "import gate; ..."` one-liner — the `-c` form gets flagged by smart approval, and inside a compound command the approval prompt can block the whole call with no send and no `gate_timestamp` recorded. Do not probe Telegram connectivity with a test message to the user's channel — the gate send returning `sent` is itself the connectivity check.
 - **Subplanner writes implementation, not spec** — the #1 failure mode. Fix the subplanner prompt (see step 5 of Phase 1), don't patch the plan output.

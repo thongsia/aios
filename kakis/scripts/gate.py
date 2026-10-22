@@ -61,14 +61,22 @@ def log_notification(workspace: str, text: str) -> None:
         f.write(f"[{ts}] {text}\n")
 
 def send_telegram(message: str) -> bool:
-    """Send via 'hermes send --to telegram'. Returns True on success."""
+    """Send via 'hermes send --to telegram'. Returns True only on CONFIRMED delivery.
+
+    Exit code alone is not proof: 'hermes send' exits 0 for 'skipped' results too
+    (e.g. cron auto-deliver duplicate target) where nothing was sent. Require the
+    --json payload to say success=true and skipped=false.
+    """
     try:
         result = subprocess.run(
-            ["hermes", "send", "--to", "telegram", message],
+            ["hermes", "send", "--to", "telegram", "--json", message],
             capture_output=True, text=True, timeout=30,
         )
-        return result.returncode == 0
-    except (FileNotFoundError, subprocess.TimeoutExpired, Exception):
+        if result.returncode != 0:
+            return False
+        payload = json.loads(result.stdout) if result.stdout.strip() else {}
+        return bool(payload.get("success")) and not payload.get("skipped")
+    except (FileNotFoundError, subprocess.TimeoutExpired, json.JSONDecodeError, Exception):
         return False
 
 def send_notification(message: str, workspace: str, attachment_path: str = None) -> bool:
