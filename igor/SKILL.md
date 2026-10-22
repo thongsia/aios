@@ -1,7 +1,7 @@
 ---
 name: Igor
 description: "Use for feasibility research: go/risky/no-go verdict."
-version: 1.0.3
+version: 1.0.4
 author: Hermes Agent
 license: MIT
 platforms: [linux, macos]
@@ -13,7 +13,7 @@ metadata:
 
 # Igor — Feasibility Researcher
 
-Assess whether a goal is buildable in the current environment before committing to full planning. Produces a compact feasibility report — a go / risky / no-go verdict, one-paragraph rationale, key unknowns, dependencies, and top risks — and saves it to `feasibility.md`. Research only: no planning, no code, no execution.
+Assess whether a goal is buildable in the current environment before committing to full planning. Produces a compact feasibility report — a go / risky / no-go verdict, one-paragraph rationale, key unknowns, dependencies, and top risks (plus, where the task depends on external data, whether good data sources are available) — and saves it to `feasibility.md`. Research only: no planning, no code, no execution.
 
 ## When to Use
 
@@ -72,11 +72,17 @@ RESEARCH TASKS:
 - Identify required tools, APIs, credentials, and environment prerequisites. Verify
   which exist locally (read-only terminal checks are fine) and which are missing.
 - Research any unknown domains or technologies via web search as needed.
+- Where the goal depends on external data (datasets, feeds, price/market/news
+  data, scraped content, training data), determine whether good data sources
+  are available: name concrete sources; note access (auth, quota, cost), format,
+  coverage, and freshness. If no good source exists, say so explicitly — missing
+  data can be a hard blocker (NO-GO) or a soft one (RISKY).
 - Identify blockers, dependencies, and risks.
 
 VERDICT — choose exactly one, with a one-paragraph rationale:
 - GO: no hard blockers; required tools/creds/env exist or are trivially obtainable;
-  every external dependency is satisfiable in the current environment.
+  every external dependency is satisfiable in the current environment — including
+  a usable data source when the goal depends on external data.
 - RISKY: soft blockers or unknowns exist (missing cred, uncertain API, unknown
   dependency) but each has a plausible workaround. Proceed with noted caveats.
 - NO-GO: a hard blocker cannot be satisfied here (required service absent with no
@@ -94,6 +100,10 @@ REPORT FORMAT (max 40 lines):
 
 ## Dependencies
 - [each dependency: present / missing / uncertain]
+
+## Data Sources
+[only when the goal depends on external data: one line per source — what it
+provides, access, quality/coverage; or "no good source found: <gap and impact>"]
 
 ## Top Risks
 1. [top 3, most severe first]
@@ -130,7 +140,7 @@ Confirm `<workspace>/feasibility.md` exists and contains a `=== FEASIBILITY:` li
 - [ ] Researcher delegated via `delegate_task` with the goal and context above
 - [ ] `feasibility.md` exists and has a valid `=== FEASIBILITY: <GO|RISKY|NO-GO> ===` line
 - [ ] Verdict is GO, RISKY, or NO-GO (never fabricated; fallback is RISKY)
-- [ ] Report has Rationale, Key Unknowns, Dependencies, Top Risks sections
+- [ ] Report has Rationale, Key Unknowns, Dependencies, Top Risks sections — plus a Data Sources section when the goal depends on external data
 - [ ] Report is ≤ 40 lines
 - [ ] Standalone: Telegram notification sent and exit code 0; Orchestrated: no notification
 - [ ] Researcher did not load Kakis/Dory/Bob and did not write code or modify files
