@@ -1,7 +1,7 @@
 ---
 name: aios-repo-maintenance
 description: "Maintain the aios skillset repo: fixes, sync, republish."
-version: 0.1.0
+version: 0.2.0
 author: Hermes Agent
 license: MIT
 platforms: [linux, macos]
@@ -20,6 +20,16 @@ Apply fixes to the aios skillset repo (docs, skill files, scripts) and keep all 
 - **Repo** (edit here, then push): `~/workspace/refs/aios`, branch `master`.
 - **Install**: `~/.hermes/skills/aios` — a git clone of the repo; the live skills this machine loads.
 - **Published docs**: OpenSearch alias `kakis_meta` (docs `schema/v1`, `query-cookbook/v1`, `index-map/v1`), whose bodies are `kakis/references/schema-v1.json`, `kakis/references/query-cookbook.md`, and the index map. Writer: `kakis/scripts/kakis_publish_meta.py`. Endpoint: env var `AIOS_OPENSEARCH` (or `~/.hermes/.env`), else `--opensearch http://192.168.18.101:9200`.
+
+## Setup audit (env, endpoints, harnesses)
+
+When asked whether the skillset is set up to run (env, IPs, harnesses), verify in this order — a file existing is not the same as a setting being live:
+
+1. **Env keys** in `~/.hermes/.env`: `AIOS_OPENSEARCH` (kakis mirror), `AIOS_QWEN_BASE_URL` + `AIOS_QWEN_MODEL` (Bob's qwen endpoint), `TELEGRAM_BOT_TOKEN` + `TELEGRAM_HOME_CHANNEL` (gates, notifications). Per-machine values belong in this file, never in a session export: a missing var fails as a silent no-op (the export skips mirroring, qwen drops its OPENAI_* injection) instead of an error, so absence is only found by grepping for the key.
+2. **Endpoints**: `curl` the OpenSearch root and `_cat/aliases/kakis_*` (expect runs/artifacts/calls/meta), and the LLM endpoint's `/v1/models`. A harness 404ing on a model name means the config's model id drifted from the served id — fix the id; display names are cosmetic, ids go on the wire.
+3. **Harness binaries**: `command -v` each of `opencode hermes qwen dsh` in a NON-interactive shell. rc-file PATH exports (`~/.bashrc`) do not apply there, and Bob's preflight uses `shutil.which` on the dispatcher's PATH — a binary visible under interactive `bash -ic` but missing from `command -v` is silently skipped. Fix: symlink into an always-on-PATH dir (e.g. `~/.local/bin`).
+4. **Harnesses actually work**: per-harness one-word live test plus one single-harness `bob_dispatch.py` end-to-end — full copy-paste recipe in `references/harness-verification.md`.
+5. **Three-way sync**: repo + install `git status` clean, `HEAD == origin/master`, README version table matches every frontmatter `version`.
 
 ## Procedure
 
