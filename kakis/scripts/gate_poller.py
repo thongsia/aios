@@ -46,8 +46,12 @@ def log_notification(workspace: str, text: str) -> None:
         f.write(f"[{ts}] {text}\n")
 
 
-def decided_path(workspace: str) -> str:
-    return os.path.join(workspace, ".gate_decided")
+def decided_path(workspace: str, gate: str) -> str:
+    """Per-gate sentinel. A run has MULTIPLE auto-advancing gates (gate1, gate2):
+    a single shared .gate_decided sentinel made the gate2 poller exit silently
+    because gate1's sentinel was still present (incident 2026-10-24:
+    gate2 never auto-proceeded, gate waited 4h until manual reply)."""
+    return os.path.join(workspace, f".gate_decided_{gate}")
 
 
 def auto_proceed(workspace: str, state: dict) -> None:
@@ -71,8 +75,8 @@ def auto_proceed(workspace: str, state: dict) -> None:
 
     save_state(workspace, state)
 
-    # Write sentinel so cron stops polling
-    with open(decided_path(workspace), "w") as f:
+    # Write per-gate sentinel so cron stops polling this gate
+    with open(decided_path(workspace, gate_label), "w") as f:
         f.write(f"auto_proceed at {ts}\n")
 
     print(f"AUTO-PROCEED: {workspace} gate={gate_label} -> phase={state['phase']}")
@@ -80,14 +84,14 @@ def auto_proceed(workspace: str, state: dict) -> None:
 
 def check_gate(workspace: str) -> bool:
     """Check a single run workspace. Returns True if action was taken."""
-    # If already decided, skip
-    if os.path.exists(decided_path(workspace)):
-        return False
-
     state = load_state(workspace)
 
     # Only act if gate is waiting
     if not state.get("gate_waiting"):
+        return False
+
+    # If THIS gate is already decided, skip (per-gate sentinel)
+    if os.path.exists(decided_path(workspace, state.get("gate", "unknown"))):
         return False
 
     gate_ts = state.get("gate_timestamp")

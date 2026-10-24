@@ -96,6 +96,8 @@ CORE RULES:
 - Fresh run: treat this prompt as the first and only request. Do not assume prior context.
 - Self-sufficient: if the prompt is ambiguous, choose the most reasonable option. Do not ask questions.
 - Spec-level detail, not full implementation: provide enough detail for a developer to implement, but avoid writing complete shell scripts or production-ready code. Use pseudo-code, command outlines, and file structure descriptions.
+- Work ONLY from the PROMPT text above. Do NOT read any other file in the task folder (plan_*.txt, review_*.txt, prompt_*.txt) — prior-iteration artifacts exist on disk but are not inputs to your run; the loop's guarantee is that the prompt alone must produce the plan.
+- Output discipline: the plan file contains exactly ONE '=== PROMPT ===' section (the prompt verbatim) followed by exactly ONE '=== PLAN ===' section. Do not echo this PLAN FORMAT block, these CORE RULES, or any other instructions into the plan file.
 ```
 
 **Note:** the subagent only needs `file` read/write. `delegate_task` has no per-call toolset parameter, so the child inherits the orchestrator's toolsets (which include `file`); no extra toolsets are required.
@@ -332,11 +334,13 @@ MEDIA:~/workspace/<TASK_FOLDER>/final_prompt.md"
 
 5. **Token cost.** Each iteration spawns two subagents carrying the full prompt. For simple tasks, 3-4 iterations is enough. For complex tasks, the severity gates (iter 3) and final review mode (iter 5) naturally drive convergence.
 
+6. **Subplanner leaks from the task folder.** A fresh context does not isolate the subagent from disk: prior `plan_*`/`review_*`/`prompt_*` files sit in the task folder, and a planner will read them (and may even paste the PLAN FORMAT template into its own output). Both leaks break the loop's core guarantee — a plan produced from peeked artifacts passes review while the prompt is still insufficient, so the saturation signal lies. The subplanner context (step 1) carries the isolation + anti-echo lines to prevent both; if you see either symptom in `plan_N.txt`, re-dispatch that iteration and treat the affected review's "all fixed" verdicts as suspect until the clean plan reproduces them.
+
 ## Verification Checklist
 
 - [ ] Task folder name derived from prompt (slugified, lowercase, hyphenated, max 40 chars)
 - [ ] Working directory created and cleaned under ~/workspace/<TASK_FOLDER>/
-- [ ] Subplanner receives only current prompt (no previous plan)
+- [ ] Subplanner receives only the current prompt (no previous plan) — enforced in the context, not by the fresh context: the task folder on disk is visible to the subagent, so the context must forbid reading prior `plan_*`/`review_*`/`prompt_*` files
 - [ ] Subreviewer receives previous review summary for regression checking
 - [ ] Saturation check uses delta significance, not full-text comparison
 - [ ] Operational-only iterations trigger early saturation
