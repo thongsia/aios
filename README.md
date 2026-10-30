@@ -13,7 +13,7 @@ the agent picks them up.
 | [`Kakis`](kakis/) | 0.7.1 | The orchestrator: User (goals) → Igor → Dory (prompt) → Bob (plan) → Execute, with three Telegram decision gates. User supplies a goal, Kakis does the rest. |
 | [`Igor`](igor/) | 1.0.4 | Feasibility research assistant: a single research subagent produces a GO / RISKY / NO-GO verdict. Particular emphasis on data availability and skills recall (WIP). |
 | [`Dory`](dory/) | 1.1.4 | Iterative plan-review loop (subplanner ↔ subreviewer) until theoretical saturation is reached. Outputs a final prompt as specs. |
-| [`Bob`](bob/) | 1.1.2 | Fan-out/fan-in: dispatch a prompt to multiple AI coding agents to produce individual plans, evaluates them, then synthesize a best-of-breed plan. Not simply merge, but pick the best and augment with the rest. |
+| [`Bob`](bob/) | 1.1.2 | Fan-out/fan-in: dispatch a prompt (specs) to multiple AI coding agents to produce individual plans, evaluates them, then synthesize a best-of-breed plan. Not simply merge, but pick the best and augment with the rest. |
 | [`Billy`](billy/) | 1.0.0 | Study publisher: uploads the most recent completed Kakis run to a new private GitHub repo, following common sense conventions. |
 | [`kakis_memory`](kakis_memory/) | 1.0.2 | Access protocol for the OpenSearch mirror — how any other agent discovers and queries Kakis history |
 | [`prompt-writing`](prompt-writing/) | 1.0.1 | Production-grade prompt writing patterns (Anthropic canonical style), used to write an improved prompt to Dory. |
@@ -41,7 +41,7 @@ goal ──▶ Igor (feasibility) ──▶ GATE 0 ──▶ Dory (plan iterate)
 Run workspaces land in `~/.hermes/kakis-runs/<slug>_<timestamp>/` (override
 the root with `KAKIS_RUNS_ROOT`).
 
-## OpenSearch memory mirror
+## Memory (OpenSearch mirror)
 
 Every run can be mirrored — artifacts **and sub-module call traces** —
 into OpenSearch (best-effort, skipped when `AIOS_OPENSEARCH` is unset or
@@ -135,3 +135,5 @@ Prerequisites for a full Kakis run: Telegram configured in `~/.hermes/.env`
 (`TELEGRAM_BOT_TOKEN`, `TELEGRAM_HOME_CHANNEL`) and at least one working Bob
 harness. The OpenSearch mirror is optional — Kakis runs fine without it.
 A `.env.example` at the repo root lists every setting the scripts read.
+
+There should be enough information in the repo for an agent to help configure the pipeline. Just ask. 
