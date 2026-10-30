@@ -12,11 +12,11 @@ the agent picks them up.
 |---|---|---|
 | [`Kakis`](kakis/) | 0.7.1 | The orchestrator: User (goals) → Igor → Dory (prompt) → Bob (plan) → Execute, with three Telegram decision gates. User supplies a goal, Kakis does the rest. |
 | [`Igor`](igor/) | 1.0.4 | Feasibility research assistant: a single research subagent produces a GO / RISKY / NO-GO verdict. Particular emphasis on data availability and skills recall (WIP). |
-| [`Dory`](dory/) | 1.1.4 | Iterative plan-review loop (subplanner ↔ subreviewer) until theoretical saturation is reached. Outputs a final prompt as specs. |
-| [`Bob`](bob/) | 1.1.2 | Fan-out/fan-in: dispatch a prompt (specs) to multiple AI coding agents to produce individual plans, evaluates them, then synthesize a best-of-breed plan. Not simply merge, but pick the best and augment with the rest. |
-| [`Billy`](billy/) | 1.0.0 | Study publisher: uploads the most recent completed Kakis run to a new private GitHub repo, following common sense conventions. |
+| [`Dory`](dory/) | 1.1.4 | Iterative plan-review loop (subplanner ↔ subreviewer) until theoretical (ideation) saturation is reached. Outputs a final prompt as high-level specs. |
+| [`Bob`](bob/) | 1.1.2 | Fan-out/fan-in: dispatch a prompt (specs) to multiple AI agents to produce individual plans, evaluates them, then synthesize a best-of-breed plan. Not simply merge, but pick the best and augment with the rest. |
+| [`Billy`](billy/) | 1.0.0 | Study publisher: uploads the most recent completed Kakis run to a new private GitHub repo, following common sense conventions (e.g. common structure, layman lingo, labelled tables and figures etc. |
 | [`kakis_memory`](kakis_memory/) | 1.0.2 | Access protocol for the OpenSearch mirror — how any other agent discovers and queries Kakis history |
-| [`prompt-writing`](prompt-writing/) | 1.0.1 | Production-grade prompt writing patterns (Anthropic canonical style), used to write an improved prompt to Dory. |
+| [`prompt-writing`](prompt-writing/) | 1.0.1 | Production-grade prompt writing patterns (Anthropic canonical style), used to write an improved prompt to Dory for her next iteration. |
 | [`aios-repo-maintenance`](aios-repo-maintenance/) | 0.2.0 | Maintains the skillset itself: apply fixes and keep the repo, live install, and published kakis_meta docs in sync. |
 
 ## The Kakis pipeline
