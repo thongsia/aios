@@ -1,8 +1,6 @@
-# AIOS — AI Orchestration Skillset for human-in-the-loop agentic workflows
+# AIOS — AI Orchestration Skillset for human-in-the-loop agentic pipelines
 
-_Disclaimer: This is very much a work-in-progress. It captures my research interest in an ecosystem of skillful agents, where skills can be learned, honed, and recalled. The orchestration skillset is the beginning. The eventual goal is an AI Operating System -- the real AIOS._
-
-AIOS is a skillset developed on Hermes Agent harness that chains AI agents into a semi-autonomous, human-in-the-loop planning-and-execution pipeline. Its aim is to turn a human curiosity or goal into results, in a high quality way. Every run can be mirrored into OpenSearch as searchable long-term memory (best-effort — see the OpenSearch section).
+AIOS is a skillset developed on Hermes Agent harness that chains AI agents into a semi-autonomous, human-in-the-loop planning-and-execution pipeline. Its aim is to turn goals or simple curiosities into results, in a high quality way. Every run can be mirrored into OpenSearch as searchable long-term memory (best-effort — see the OpenSearch section) for audit and learning purposes.
 
 Each skill is a `SKILL.md` (procedural memory loaded on demand by the agent)
 plus optional scripts. No build step — clone into your skills directory and
