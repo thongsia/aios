@@ -6,7 +6,7 @@ Each skill is a `SKILL.md` (procedural memory loaded on demand by the agent)
 plus optional scripts. No build step — clone into your skills directory and
 the agent picks them up.
 
-## Skills
+## Skillset
 
 ### Core skills
 
