@@ -12,10 +12,10 @@ the agent picks them up.
 
 | Skill | Version | What it does |
 |---|---|---|
-| [`Kakis`](kakis/) | 0.7.1 | The orchestrator: User (goals) → Igor → Dory (prompt) → Bob (plan) → Execute, with three Telegram decision gates. User supplies a goal, Kakis does the rest. |
+| [`Kakis`](kakis/) | 0.7.1 | The orchestrator: User (goals) → Igor → Dory (prompt) → Bob (plan) → Execute, with three Telegram decision gates. User supplies a goal, Kakis does the rest. [diagram](kakis/kakis.png) |
 | [`Igor`](igor/) | 1.0.4 | Feasibility research assistant: a single research subagent produces a GO / RISKY / NO-GO verdict. Particular emphasis on data availability and skills recall (WIP). |
-| [`Dory`](dory/) | 1.1.4 | Iterative plan-review loop (subplanner ↔ subreviewer) until theoretical (ideation) saturation is reached. Outputs a final prompt as high-level specs. |
-| [`Bob`](bob/) | 1.1.2 | Fan-out/fan-in: dispatch a prompt (specs) to multiple AI agents to produce individual plans, evaluates them, then synthesize a best-of-breed plan. Not simply merge, but pick the best and augment with the rest. |
+| [`Dory`](dory/) | 1.1.4 | Iterative plan-review loop (subplanner ↔ subreviewer) until theoretical (ideation) saturation is reached. Outputs a final prompt as high-level specs. [diagram](dory/dory.png) |
+| [`Bob`](bob/) | 1.1.2 | Fan-out/fan-in: dispatch a prompt (specs) to multiple AI agents to produce individual plans, evaluates them, then synthesize a best-of-breed plan. Not simply merge, but pick the best and augment with the rest. [diagram](bob/bob.png) |
 
 ### Supporting skills
 
