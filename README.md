@@ -36,8 +36,8 @@ goal ──▶ Igor (feasibility) ──▶ GATE 0 ──▶ Dory (plan iterate)
 ```
 
 - **Gates** are real decision points: the agent sends a Telegram message and
-  stops; the user's reply (`/kakis proceed` / `/kakis stop`, optionally with a
-  scope note) is classified on resume. Gates 1 and 2 auto-proceed after an
+  stops; the user reply (`/kakis proceed` / `/kakis stop`, optionally with a
+  scope note) via Telegram or TUI to proceed or abort. Gates 1 and 2 auto-proceed after an
   hour of silence via a cron poller; Gate 0 waits indefinitely.
 - **Resume**: all state lives in `<run_workspace>/kakis_state.json`; an
   interrupted run is discovered and resumed, skipping completed steps.
