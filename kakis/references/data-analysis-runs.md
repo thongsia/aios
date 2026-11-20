@@ -13,9 +13,17 @@ controls, dual estimation/interpretation windows).
 
 - Probe the source data read-only BEFORE the loop: row counts, actual
   date ranges, when each series/label/value first appears, what each
-  category actually means. Inject the verified facts into the
-  subplanner's Reference section, with instructions to confirm rather
-  than assume.
+  category actually means. Inject the verified facts into BOTH the
+  Phase 0.5 feasibility researcher's context (label them as
+  orchestrator pre-verified, with an instruction to re-verify anything
+  it relies on) and the subplanner's Reference section, with
+  instructions to confirm rather than assume.
+- For flag/label consistency probes, print a full cross-tab (flag value x
+  category, e.g. Handheld x Console) rather than a mismatch count alone — a
+  bare mismatch count is ambiguous about which slice produced it, and a
+  misread count leaks into verified_facts and forces a researcher correction
+  before the gate. Derive every fact recorded in state from a printed group
+  count, not from a single diff count.
 - Require the plan to verify that the variable of interest VARIES
   within its estimation window: a treatment variable that is flat over
   a sub-window makes estimation on that sub-window rank-deficient.

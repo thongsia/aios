@@ -37,3 +37,35 @@ categorisation study run).
 - Registration / OMV annual statistics: lta.gov.sg statistics page (annual
   cost PDFs, "Average OMV of New Cars Registered") — the fallback for
   full-year registration mix when the datastore is frozen.
+- Rail reliability (MRT): monthly rolling 12-month PDF on the same
+  statistics page (monthly editions since 2025-10, quarterly before) — the
+  filename rolls, so re-verify the current edition at run time. Verified
+  structure: per-line MKBF (12-mo moving average), >30-min delay counts per
+  line per month + monthly mileage (train-km), TSD/TP (last 3 months only),
+  a dated incident list (date/line + estimated passengers impacted), a
+  separate TEL box (TEL excluded from the main tables while its Stage 5
+  works continue), international comparisons; a historical annex carries
+  annual MKBF 2020-2025. Newsroom releases accompany each update.
+
+## User's IFTTT social-media archive (Google Drive)
+
+IFTTT-to-Drive capture of @LTAsg, @SMRT_Singapore, @SBSTransit_Ltd tweets —
+the user's "ifttt/tweets" folder: Drive root folder "IFTTT" > "Twitter".
+Enumerate the folder at run time — IFTTT rolls new sheets into per-handle
+chains, so any saved file list goes stale.
+
+- Access: google-workspace skill (google_api.py / GAPI; Drive read scope).
+  Enumerate: GAPI drive search "'<parent_folder_id>' in parents and
+  trashed=false" --raw-query. Download: GAPI drive download <FILE_ID>
+  --output f.csv (Google sheets export to CSV).
+- Sheet schema: 4 columns, NO header row: [date 'Month D, YYYY at H:MMAM/PM',
+  @handle, tweet text (may contain newlines), status URL (snowflake id)].
+- Quirks: per-handle files chain with "(N)" name suffixes (~2000 rows each,
+  contiguous handoffs); IFTTT sometimes appends the same row twice
+  adjacently WITHIN one file — dedupe by status id before counting; ignore
+  template placeholder files (names containing '{{UserName}}'). Capture is
+  live (sheets update daily).
+- Coverage at last check (2026-11; re-verify spans at run time): LTAsg
+  ~7.2k tweets from 2016-04; SMRT ~2.3k from 2016-04 but with capture gaps
+  of 20-105 days inside 2024-2026 (low-confidence windows — disclose in
+  results); SBS ~13k, ~95% bus/LRT updates (context only for MRT work).
