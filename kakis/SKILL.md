@@ -1,7 +1,7 @@
 ---
 name: Kakis
 description: "Research→Dory→Bob→execute orchestration with Telegram gates."
-version: 0.7.5
+version: 0.7.6
 author: Hermes Agent
 license: MIT
 platforms: [linux, macos]
@@ -181,7 +181,7 @@ Same pattern as Gate 1 (same wrapper-script recipe, `check` subcommand, `gate` f
      script='kakis_gate2_<slug>_poller.py',
      no_agent=True, deliver='telegram', repeat=6)
    ```
-3. Compose a Telegram message from `bob_brief.md`: harnesses used, best harness, score, plan step count. Append:
+3. Compose a Telegram message from `bob_brief.md`: harnesses used, best harness, score, plan step count. Attach the plan the same way as Gate 1 — append `MEDIA:<run_workspace>/bob_plan.md` as a final line of the message file before sending: the user approves the synthesized plan at this gate, so the plan itself must arrive with the brief, and the no-false-attachment-claims rule applies equally. Append:
    ```
    Reply with '/kakis proceed' to continue or '/kakis stop' to abort.
    ```
