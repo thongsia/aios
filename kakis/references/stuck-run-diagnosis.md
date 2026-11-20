@@ -21,6 +21,8 @@ Use when a Kakis run appears stalled: no progress for hours, a gate that appears
 - **`gate_waiting: true` with the poller job repeat-exhausted** — the timeout window closed with no fire after the deadline (6 ticks land ON the 3600 s deadline with zero slack). The gate will not auto-proceed; resume manually or re-schedule a poller.
 - **Gate message arrived with no attachment** — check the `gateN_message.txt` on disk: `hermes send` attaches only `MEDIA:<path>` lines in the body; `gate.py` has no attachment path of its own. Judge from the file, not from memory of what was sent.
 - **Timestamp mismatches** — state / `notification.log` are UTC; cron records and filesystem mtimes are local (host is UTC+8). Convert before comparing.
+- **Advance lag within one tick** — with 10-min polling against a 3600 s timeout, the auto-proceed lands on the first tick strictly after the deadline: 0-10 min late. A run observed between the deadline and that tick looks 'stuck at the gate without auto-proceeding' — but it is not. Confirm with `gate_waiting: false` in state plus an `[AUTO-PROCEED]` line whose timestamp is within one tick after `gate_timestamp + 3600s`.
+- **Advance tick still `running` in executions.db** — when the poller is the recommended agent job (Kakis skill + 'continue from the current phase' prompt), the fire that performs the advance stays `running` in `executions.db` for as long as that agent turn drives the follow-up execution batches (new `execution_batch` records in `calls.jsonl` appear inside that window). A long-lived `running` row on the advance tick is expected, not a hang — verify progress from `calls.jsonl` / batch artifacts, not the execution record.
 
 ## Boundary
 
