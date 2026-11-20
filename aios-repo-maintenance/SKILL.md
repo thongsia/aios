@@ -1,7 +1,7 @@
 ---
 name: aios-repo-maintenance
 description: "Maintain the aios skillset repo: fixes, sync, republish."
-version: 0.2.0
+version: 0.2.4
 author: Hermes Agent
 license: MIT
 platforms: [linux, macos]
@@ -20,6 +20,10 @@ Apply fixes to the aios skillset repo (docs, skill files, scripts) and keep all 
 - **Repo** (edit here, then push): `~/workspace/refs/aios`, branch `master`.
 - **Install**: `~/.hermes/skills/aios` — a git clone of the repo; the live skills this machine loads.
 - **Published docs**: OpenSearch alias `kakis_meta` (docs `schema/v1`, `query-cookbook/v1`, `index-map/v1`), whose bodies are `kakis/references/schema-v1.json`, `kakis/references/query-cookbook.md`, and the index map. Writer: `kakis/scripts/kakis_publish_meta.py`. Endpoint: env var `AIOS_OPENSEARCH` (or `~/.hermes/.env`), else `--opensearch http://192.168.18.101:9200`.
+
+## Sync before editing
+
+The repo copy lags origin/master — the user pushes from other machines/sessions, so the remote advances between sessions. Before the first edit: `git status --short` must be clean (inspect and capture uncommitted work before any sync), then `git fetch -q origin && git merge --ff-only origin/master`. If the fast-forward fails, stop and report the divergence — never force-reset or rebase the edit copy.
 
 ## Setup audit (env, endpoints, harnesses)
 
@@ -40,13 +44,15 @@ When asked whether the skillset is set up to run (env, IPs, harnesses), verify i
 5. ASCII diagrams with column annotations: never align by eye. Compute the anchor column index in Python, place the annotation segments, assert no two segments overlap in a row, then splice the block in.
 6. Bump the frontmatter `version` of every skill whose content changed, and reconcile the README version table against every skill's frontmatter — check ALL rows, not just the ones you touched; the table drifts.
 7. Commit in logical groups (one skill per commit with its version bump; README per commit; cross-skill contracts together; mechanical normalization last). Commit means commit AND push — push every commit.
-8. Re-sync the install: first `git status --short` in `~/.hermes/skills/aios` — uncommitted drift there may be self-improvement edits that belong in the repo; capture it as a patch, apply to the repo, commit, push. Then `git fetch -q && git reset --hard origin/master && git status --short` must be empty.
+8. Re-sync the install: first `git status --short` in `~/.hermes/skills/aios` — uncommitted drift there may be self-improvement edits that belong in the repo; capture it as a patch, apply to the repo, commit, push. `M` and `??` entries are both drift — sessions routinely create files in the install (reference docs, scripts) that never get committed. Apply the captured patch with `git apply --check` first: a failed check means the remote landed an edit on the same file between the install's base and origin/master — re-apply the intended change by hand on top of the synced version rather than forcing the stale patch, then verify each applied file is byte-identical to the install's working file. Then `git fetch -q && git reset --hard origin/master && git status --short` must be empty.
 9. If `schema-v1.json` or `query-cookbook.md` changed: run `kakis_publish_meta.py` (with `--opensearch` if the env var is unset), then verify the live bodies by reading them back — `_search` against the `kakis_meta` alias (a direct `_doc/<id>` GET 400s because the doc ids contain slashes), and grep each body for the old wording → expect zero.
 10. Report per item: fixed / no-change-needed with the reason, version bumps, commit SHAs, install clean, live docs verified.
 
 ## Pitfalls
 
-- `reset --hard` on the install without `git status` first: silently destroys uncommitted self-improvement edits (in-repo skills can patch themselves in place on a git-clone install).
+- `reset --hard` on the install without `git status` first: silently destroys uncommitted self-improvement edits (in-repo skills can patch themselves in place on a git-clone install). If the reset already ran, recover from the session store, not from memory or a compaction summary — replay the recorded edit ops and snapshot-diff the last full `skill_view` (hermes-agent skill, `references/session-db-recovery.md`); summaries undercount what was lost.
 - Fixing the repo files and stopping: the published `kakis_meta` docs are a second copy of the same artifacts, and other agents read the alias — a repo-only fix leaves the live docs stale.
 - Renaming a skill's frontmatter `name`: the `/<name>` command surface changes with it (harness lowercases), but machine tokens must stay lowercase: phase values, module names, file paths, profile names (e.g. `bob-worker`).
 - A fix-list item that verifies as already-correct or already-implemented: report it as no-change-needed with the evidence, do not force an edit to "complete" the list.
+- skill_manage takes canonical names — lowercase, as on disk (`billy`). The aios category displays capitalised names (Billy) and skill_view resolves them case-insensitively, so a view-then-manage flow fails at manage with "Invalid skill name" and the WHOLE batch rolls back atomically, including ops on other skills. Use the directory name for every skill_manage op; display names are safe only for skill_view/skills_list.
+- **Limited-scope commit on a dirty install** — when the user asks for a scoped commit ('just commit the latest patch') while the install also carries older out-of-scope drift: commit the WHOLE file when the requested hunks and other sessions' hunks are intermixed in one file (a partial-hunk commit orphans the other lessons, and they are destroyed from the live install on any re-sync); bump version + README row only for the skill actually committed; leave out-of-scope files untouched; and do NOT run the install `reset --hard` — it destroys the remaining drift. Report the leftover drift as still pending.
