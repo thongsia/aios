@@ -1,7 +1,7 @@
 ---
 name: Kakis
 description: "Research→Dory→Bob→execute orchestration with Telegram gates."
-version: 0.7.3
+version: 0.7.4
 author: Hermes Agent
 license: MIT
 platforms: [linux, macos]
